@@ -1,0 +1,16 @@
+[
+{
+  "modid": "questmaster",
+  "name": "Quest Master",
+  "description": "A mod for Hypixel Skyblock quests",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Doppelclick"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
