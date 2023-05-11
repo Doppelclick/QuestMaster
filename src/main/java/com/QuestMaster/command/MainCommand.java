@@ -7,6 +7,7 @@ import com.QuestMaster.classes.Trigger;
 import com.QuestMaster.classes.triggers.ChatMessage;
 import com.QuestMaster.config.Config;
 import com.QuestMaster.gui.positionEditorGui;
+import com.QuestMaster.utils.FileUtils;
 import com.QuestMaster.utils.Utils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -74,12 +75,10 @@ public class MainCommand extends CommandBase {
                     new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new positionEditorGui()))).start();
                     break;
                 case "test":
-                    Quest q = new Quest();
+                    Quest q = new Quest("test");
                     q.add(new QuestElement("first", new ChatMessage("hiya", false), new Vector3f(0, 0, 0)));
-                    String f = Config.configDir + "quest.bin";
-                    Quest.save(q, f);
-                    Quest quest = Quest.load(f);
-                    Utils.sendModMessage(quest.enabled + " " + quest.disableLast + " " + quest.get(0).name + " " + ((ChatMessage) quest.get(0).progressTrigger).patterns);
+                    QuestMaster.quests.put("testdir", Collections.singletonList(q));
+                    FileUtils.saveQuests();
                     break;
 
                 default:

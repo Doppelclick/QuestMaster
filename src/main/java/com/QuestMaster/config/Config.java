@@ -2,16 +2,12 @@ package com.QuestMaster.config;
 
 import com.QuestMaster.QuestMaster;
 import com.QuestMaster.utils.Utils;
-import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.common.config.Configuration;
 
 import java.awt.*;
 import java.io.File;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Config {
     public static Configuration config;
@@ -228,55 +224,6 @@ public class Config {
             config.save();
         }
         return false;
-    }
-
-    public static boolean deleteFile(String fullDir) {
-        File delete = new File(fullDir);
-        String[] split = fullDir.split("/");
-        String fileName = split[split.length - 1];
-        if (!delete.exists() |! fullDir.contains(configDir)) {
-            QuestMaster.mc.thePlayer.addChatMessage(new ChatComponentText("Could not locate File " + fullDir));
-            return false;
-        }
-        File newdir = new File(fullDir.replace("QuestMaster", "QuestMaster/bin")).getParentFile();
-        if (!newdir.exists()) newdir.mkdirs();
-        LocalDateTime now = LocalDateTime.now();
-        String time = now.getDayOfMonth() + "-" + now.getMonthValue() + "-" + now.getYear() + "--" + now.getHour() + "-" + now.getMinute() + "-" + now.getSecond();
-        return delete.renameTo(new File(newdir + "/" + fileName + "_d_" + time + ".cfg"));
-    }
-
-    public static boolean renameFile(String dir, String newdir) {
-        File fdir = new File(dir);
-        if (!fdir.exists() |! dir.contains(configDir)) {
-            QuestMaster.mc.thePlayer.addChatMessage(new ChatComponentText("Could not locate File " + dir));
-            return false;
-        }
-        return fdir.renameTo(new File(newdir));
-    }
-
-    public static int deleteBinned() {
-        int deleted = 0;
-        File main = new File(configDir + "bin/");
-        if (main.exists()) {
-            LocalDateTime now = LocalDateTime.now();
-            int cd = now.getDayOfMonth();
-            int cm = now.getMonthValue();
-            int cy = now.getYear();
-            for (File dir : Objects.requireNonNull(main.listFiles())) {
-                for (File f : Objects.requireNonNull(dir.listFiles())) {
-                    Matcher time = Pattern.compile("/(?<day>\\d+)-(?<month>\\d+)-(?<year>\\d+)--(?<hour>\\d+)-(?<minute>\\d+)-(?<second>\\d+)\\.").matcher(f.getPath());
-                    if (time.find()) {
-                        int d = Integer.parseInt(time.group("day"));
-                        int m = Integer.parseInt(time.group("month"));
-                        int y = Integer.parseInt(time.group("year"));
-                        if (cd > d || cm > m || cy > y) {
-                            if (f.delete()) deleted++;
-                        }
-                    }
-                }
-            }
-        }
-        return deleted;
     }
 
     public static String understandMe(boolean c) {

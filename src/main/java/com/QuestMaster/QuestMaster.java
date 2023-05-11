@@ -5,6 +5,7 @@ import com.QuestMaster.classes.Quest;
 import com.QuestMaster.command.MainCommand;
 import com.QuestMaster.config.Config;
 import com.QuestMaster.handlers.PacketHandler;
+import com.QuestMaster.utils.FileUtils;
 import com.QuestMaster.utils.Utils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -29,10 +30,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 @Mod(modid = QuestMaster.Name, version = QuestMaster.V)
 public class QuestMaster {
@@ -47,7 +45,7 @@ public class QuestMaster {
     public static Island island = Island.NONE;
     public static String area = "unknown";
 
-    public static List<Quest> quests = new ArrayList<>();
+    public static HashMap<String, List<Quest>> quests = new HashMap<>();
 
     @Mod.EventHandler
     void preInit(final FMLPreInitializationEvent event) {
@@ -58,9 +56,11 @@ public class QuestMaster {
     void init(FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(this);
         Config.cfgReload();
-        int fileDelStat = Config.deleteBinned();
+        int fileDelStat = FileUtils.deleteBinned();
 
-        logger.info("Finished init, deleted " + fileDelStat + " binned files from yesterday.");
+        int questLoadStat = FileUtils.loadQuests();
+
+        logger.info("Finished init, deleted " + fileDelStat + " binned files from yesterday or older, loaded " + questLoadStat + " quests.");
     }
 
     @SubscribeEvent

@@ -15,6 +15,9 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import java.util.List;
+import java.util.Map;
+
 public class QuestEventHandler {
 
     @SubscribeEvent
@@ -51,8 +54,10 @@ public class QuestEventHandler {
     }
 
     private void questForLoop(Object object) {
-        for (Quest quest : QuestMaster.quests) {
-            quest.checkTrigger(object);
+        for (Map.Entry<String, List<Quest>> category : QuestMaster.quests.entrySet()){
+            for (Quest quest : category.getValue()) {
+                quest.checkTrigger(object);
+            }
         }
     }
 }

@@ -3,24 +3,25 @@ package com.QuestMaster.classes;
 import com.QuestMaster.config.Config;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 
 public class Quest extends ArrayList<QuestElement> implements Serializable {
+    public String name;
     public boolean enabled = false;
     public boolean disableLast = true;
 
-    public Quest() {
-
+    public Quest(String name) {
+        this.name = name;
     }
 
-    public Quest(boolean disableLast) {
+    public Quest(String name, boolean disableLast) {
+        this.name = name;
         this.disableLast = disableLast;
     }
 
-    public Quest(boolean enabled, boolean disableLast) {
+    public Quest(String name, boolean enabled, boolean disableLast) {
+        this.name = name;
         this.enabled = enabled;
         this.disableLast = disableLast;
     }
@@ -46,22 +47,5 @@ public class Quest extends ArrayList<QuestElement> implements Serializable {
             super.get(0).enabled = true;
         }
         this.enabled = enabled;
-    }
-
-    public static void save(Quest quest, String filename) {
-        try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(Paths.get(filename)))) {
-            out.writeObject(quest);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static Quest load(String filename) {
-        try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(Paths.get(filename)))) {
-            return (Quest) in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 }
