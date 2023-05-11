@@ -3,19 +3,22 @@ package com.QuestMaster.classes.triggers;
 import com.QuestMaster.QuestMaster;
 import com.QuestMaster.classes.Trigger;
 import com.QuestMaster.utils.SkyblockItemHandler;
+import com.QuestMaster.utils.Utils;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C07PacketPlayerDigging;
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
 import net.minecraft.util.BlockPos;
 
+import javax.vecmath.Vector3f;
+
 public class ClickPos extends Trigger {
     public int mouseButton;
-    public BlockPos position;
+    public Vector3f position;
     public int amount;
     public int timesClicked;
     public String heldItemName;
 
-    public ClickPos(int mouseButton, BlockPos position, int amount, String heldItemName) {
+    public ClickPos(int mouseButton, Vector3f position, int amount, String heldItemName) {
         this.mouseButton = mouseButton;
         this.position = position;
         this.amount = amount;
@@ -34,7 +37,7 @@ public class ClickPos extends Trigger {
             mb = 2;
         }
         if (pos != null && (mouseButton == 0 || mouseButton == mb)) {
-            if (pos.equals(position)) {
+            if (pos.equals(new BlockPos(Utils.serializableToVec3(position)))) {
                 if (heldItemName.equals("any")) ;
                 else if (QuestMaster.mc.thePlayer.getHeldItem() == null) {
                     return false;

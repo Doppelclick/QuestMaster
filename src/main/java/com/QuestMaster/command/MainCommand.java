@@ -3,6 +3,7 @@ package com.QuestMaster.command;
 import com.QuestMaster.QuestMaster;
 import com.QuestMaster.classes.Quest;
 import com.QuestMaster.classes.QuestElement;
+import com.QuestMaster.classes.Trigger;
 import com.QuestMaster.classes.triggers.ChatMessage;
 import com.QuestMaster.config.Config;
 import com.QuestMaster.gui.positionEditorGui;
@@ -12,9 +13,8 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.Vec3;
 
-import java.io.File;
+import javax.vecmath.Vector3f;
 import java.util.Collections;
 import java.util.List;
 
@@ -74,12 +74,12 @@ public class MainCommand extends CommandBase {
                     new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new positionEditorGui()))).start();
                     break;
                 case "test":
-                    Quest q = new Quest() {{
-                        }};
+                    Quest q = new Quest();
+                    q.add(new QuestElement("first", new ChatMessage("hiya", false), new Vector3f(0, 0, 0)));
                     String f = Config.configDir + "quest.bin";
                     Quest.save(q, f);
                     Quest quest = Quest.load(f);
-                    Utils.sendModMessage(quest.enabled + " " + quest.disableLast);
+                    Utils.sendModMessage(quest.enabled + " " + quest.disableLast + " " + quest.get(0).name + " " + ((ChatMessage) quest.get(0).progressTrigger).patterns);
                     break;
 
                 default:

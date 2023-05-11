@@ -1,25 +1,28 @@
 // For those who want the bleeding edge
 buildscript {
     repositories {
-        mavenCentral()
-        gradlePluginPortal()
-        maven { url = "https://jitpack.io" }
-        maven { url = "https://maven.minecraftforge.net/" }
-        maven { url = "https://repo.spongepowered.org/maven" }
+        jcenter()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
     }
     dependencies {
-        classpath "com.github.debuggingss:ForgeGradle:FG_2.1-SNAPSHOT"
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
     }
 }
-apply plugin: "java"
-apply plugin: "net.minecraftforge.gradle.forge"
+apply plugin: 'net.minecraftforge.gradle.forge'
 
 version = "0.1.0"
 group = "com.QuestMaster"
 archivesBaseName = "QuestMaster"
 
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
-compileJava.options.encoding = "UTF-8"
+sourceCompatibility = targetCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
 
 sourceSets {
     main {
@@ -27,48 +30,38 @@ sourceSets {
     }
 }
 
+
 minecraft {
     version = "1.8.9-11.15.1.2318-1.8.9"
     runDir = "run"
+
     mappings = "stable_22"
     makeObfSourceJar = false
 }
 
-configurations {
-    embed
-    implementation.extendsFrom(embed)
-}
 
-repositories {
-    mavenCentral()
-    maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
-    maven { url = "https://jitpack.io/" }
-}
-
-dependencies {
-    annotationProcessor "com.google.code.gson:gson:2.2.4"
-    annotationProcessor "com.google.guava:guava:21.0"
-    annotationProcessor "org.ow2.asm:asm-tree:6.2"
-    annotationProcessor "org.ow2.asm:asm-util:6.2"
-    annotationProcessor "org.apache.logging.log4j:log4j-core:2.0-beta9"
-
-    compileOnly "org.projectlombok:lombok:1.18.12"
-    annotationProcessor "org.projectlombok:lombok:1.18.12"
+jar {
+    manifest.attributes(
+            'Main-Class': 'DungeonRoomsInstallerFrame'
+    )
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 processResources {
+    // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft.version
 
+    // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
-        include "mcmod.info"
+        include 'mcmod.info'
 
-        expand "version": project.version, "mcversion": project.minecraft.version
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
     }
 
+    // copy everything else, thats not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
-        exclude "mcmod.info"
+        exclude 'mcmod.info'
     }
-
-    from(file("LICENSE"))
 }

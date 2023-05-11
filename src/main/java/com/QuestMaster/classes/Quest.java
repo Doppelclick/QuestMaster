@@ -6,10 +6,9 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
 
-public class Quest implements Serializable {
-    public List<QuestElement> elements = new ArrayList<>();
+
+public class Quest extends ArrayList<QuestElement> implements Serializable {
     public boolean enabled = false;
     public boolean disableLast = true;
 
@@ -28,23 +27,23 @@ public class Quest implements Serializable {
 
     public void checkTrigger(Object object) {
         if (this.enabled || Config.autoEnableQuests) {
-            for (int i = 0; i < this.elements.size(); i++) {
-                if (this.elements.get(i).progressTrigger.checkTrigger(object)) {
-                    this.elements.get(i).enabled = true;
+            for (int i = 0; i < super.size(); i++) {
+                if (super.get(i).progressTrigger.checkTrigger(object)) {
+                    super.get(i).enabled = true;
                     this.enabled = true;
                     if (this.disableLast && i - 1 >= 0) {
-                        if (!this.elements.get(i - 1).progressTrigger.equals(this.elements.get(i).progressTrigger)) this.elements.get(i - 1).enabled = false;
+                        if (!super.get(i - 1).progressTrigger.equals(super.get(i).progressTrigger)) super.get(i - 1).enabled = false;
                     }
                 }
             }
         }
     }
-
+    
     public void setState(boolean enabled) {
         if (!enabled) {
-            this.elements.forEach(element -> element.enabled = false);
-        } else if (this.elements.size() >= 1) {
-            this.elements.get(0).enabled = true;
+            super.forEach(element -> element.enabled = false);
+        } else if (super.size() >= 1) {
+            super.get(0).enabled = true;
         }
         this.enabled = enabled;
     }

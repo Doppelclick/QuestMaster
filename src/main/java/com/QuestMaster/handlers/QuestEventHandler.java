@@ -4,6 +4,7 @@ import com.QuestMaster.QuestMaster;
 import com.QuestMaster.classes.Quest;
 import com.QuestMaster.config.Config;
 import com.QuestMaster.events.PacketEvent;
+import com.QuestMaster.utils.Utils;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.C07PacketPlayerDigging;
@@ -19,7 +20,7 @@ public class QuestEventHandler {
     @SubscribeEvent
     void playerUpdate(LivingEvent.LivingUpdateEvent event) {
         if (!Config.modToggle |! event.entity.equals(QuestMaster.mc.thePlayer)) return;
-        questForLoop(event.entity.getPositionVector());
+        questForLoop(Utils.vec3ToSerializable(event.entity.getPositionVector()));
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)

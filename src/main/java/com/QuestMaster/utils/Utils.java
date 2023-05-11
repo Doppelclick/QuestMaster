@@ -2,7 +2,6 @@ package com.QuestMaster.utils;
 
 import com.QuestMaster.QuestMaster;
 import com.QuestMaster.classes.Island;
-import com.QuestMaster.classes.Quest;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
@@ -19,6 +18,7 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.util.StringUtils;
 import net.minecraft.util.Vec3;
 
+import javax.vecmath.Vector3f;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
@@ -28,6 +28,14 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Utils {
+
+    public static Vector3f vec3ToSerializable(Vec3 vec3) {
+        return new Vector3f((float) vec3.xCoord, (float) vec3.yCoord, (float) vec3.zCoord);
+    }
+
+    public static Vec3 serializableToVec3(Vector3f vector3f) {
+        return new Vec3(vector3f.x, vector3f.y, vector3f.z);
+    }
 
     public static List<Integer> colorToList(Color color) {
         return new ArrayList<>(Arrays.asList(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()));
@@ -193,10 +201,10 @@ public class Utils {
         return lines;
     }
 
-    public static double maxDistance(Vec3 pos, Vec3 target) {
-        double x = Math.abs(Math.abs(target.xCoord) - Math.abs(pos.xCoord));
-        double y = Math.abs(Math.abs(target.yCoord) - Math.abs(pos.yCoord));
-        double z = Math.abs(Math.abs(target.zCoord) - Math.abs(pos.zCoord));
+    public static double maxDistance(Vector3f pos, Vector3f target) {
+        double x = Math.abs(Math.abs(target.x) - Math.abs(pos.x));
+        double y = Math.abs(Math.abs(target.y) - Math.abs(pos.y));
+        double z = Math.abs(Math.abs(target.z) - Math.abs(pos.z));
         return Math.max(x, Math.max(y, z));
     }
 }
