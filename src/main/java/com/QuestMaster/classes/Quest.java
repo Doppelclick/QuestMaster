@@ -20,10 +20,10 @@ public class Quest extends ArrayList<QuestElement> implements Serializable {
         this.disableLast = disableLast;
     }
 
-    public Quest(String name, boolean enabled, boolean disableLast) {
+    public Quest(String name, boolean disableLast, boolean enabled) {
         this.name = name;
-        this.enabled = enabled;
         this.disableLast = disableLast;
+        this.enabled = enabled;
     }
 
     public void checkTrigger(Object object) {

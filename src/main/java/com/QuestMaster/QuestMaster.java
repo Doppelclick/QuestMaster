@@ -2,6 +2,8 @@ package com.QuestMaster;
 
 import com.QuestMaster.classes.Island;
 import com.QuestMaster.classes.Quest;
+import com.QuestMaster.classes.QuestElement;
+import com.QuestMaster.classes.Trigger;
 import com.QuestMaster.command.MainCommand;
 import com.QuestMaster.config.Config;
 import com.QuestMaster.handlers.PacketHandler;
@@ -26,6 +28,7 @@ import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.vecmath.Vector3f;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -45,7 +48,12 @@ public class QuestMaster {
     public static Island island = Island.NONE;
     public static String area = "unknown";
 
-    public static HashMap<String, List<Quest>> quests = new HashMap<>();
+    public static HashMap<String, List<Quest>> quests = new HashMap<String, List<Quest>>(){{
+       put("testCategory", Collections.singletonList(new Quest("testQuest", true, true) {{
+           add(new QuestElement("test this thing 1", new Trigger(), new Vector3f(0,0,0)));
+           add(new QuestElement("try out this 2", new Trigger(), new Vector3f(0,10,0)));
+       }}));
+    }};
 
     @Mod.EventHandler
     void preInit(final FMLPreInitializationEvent event) {
@@ -58,7 +66,7 @@ public class QuestMaster {
         Config.cfgReload();
         int fileDelStat = FileUtils.deleteBinned();
 
-        int questLoadStat = FileUtils.loadQuests();
+        int questLoadStat = 0; // FileUtils.loadQuests(); todo: re-enable
 
         logger.info("Finished init, deleted " + fileDelStat + " binned files from yesterday or older, loaded " + questLoadStat + " quests.");
     }

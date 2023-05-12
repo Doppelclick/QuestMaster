@@ -25,13 +25,13 @@ public class GuiManager {
             if (br instanceof GuiButton) bw = ((GuiButton) br).getButtonWidth();
             else if (br instanceof GuiTextField) bw = (((GuiTextField) br).getWidth());
             space += bw + 5;
-            if (single || (in + 1==buttons.size() &! (space - 5 > buttonspace))) {
+            if (single || (in + 1 == buttons.size() &! (space - 5 > buttonspace))) {
                 buttonplacing.put(in, space-5);
                 space = 0;
             } else if (space - 5 > buttonspace) { //if the current button makes the previous buttons too large for the row
                 if (space - bw - 5 > 0) {
                     buttonplacing.put(in - 1, space - bw - 10);
-                    if (in+1==buttons.size()) {
+                    if (in + 1 == buttons.size()) {
                         buttonplacing.put(in, bw); //because the last button would not be added
                     }
                     space = bw + 5;

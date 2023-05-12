@@ -1,13 +1,9 @@
 package com.QuestMaster.command;
 
 import com.QuestMaster.QuestMaster;
-import com.QuestMaster.classes.Quest;
-import com.QuestMaster.classes.QuestElement;
-import com.QuestMaster.classes.Trigger;
-import com.QuestMaster.classes.triggers.ChatMessage;
 import com.QuestMaster.config.Config;
-import com.QuestMaster.gui.positionEditorGui;
-import com.QuestMaster.utils.FileUtils;
+import com.QuestMaster.gui.InfoEditorGui;
+import com.QuestMaster.gui.QuestInfo;
 import com.QuestMaster.utils.Utils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -15,7 +11,6 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 
-import javax.vecmath.Vector3f;
 import java.util.Collections;
 import java.util.List;
 
@@ -68,17 +63,13 @@ public class MainCommand extends CommandBase {
                     Utils.sendModMessage("Toggled mod " + Config.understandMe(Config.modToggle));
                     Config.writeBooleanConfig("general", "modToggle", Config.modToggle);
                     break;
+
                 case "reload":
                     Config.cfgReload();
                     break;
+
                 case "infogui":
-                    new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new positionEditorGui()))).start();
-                    break;
-                case "test":
-                    Quest q = new Quest("test");
-                    q.add(new QuestElement("first", new ChatMessage("hiya", false), new Vector3f(0, 0, 0)));
-                    QuestMaster.quests.put("testdir", Collections.singletonList(q));
-                    FileUtils.saveQuests();
+                    new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new InfoEditorGui()))).start();
                     break;
 
                 default:

@@ -1,14 +1,13 @@
 package com.QuestMaster.gui;
 
 import com.QuestMaster.config.Config;
-import com.QuestMaster.utils.TextRenderer;
+import com.QuestMaster.utils.RenderUtils;
 import com.QuestMaster.utils.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.fml.client.config.GuiSlider;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -19,9 +18,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class positionEditorGui extends GuiScreen {
+public class InfoEditorGui extends GuiScreen {
     private static boolean positionEditorOpened = false;
     private GuiButton close;
+    private GuiButton toggle;
     private GuiSlider infoWidth;
     private GuiSlider infoHeight;
     private GuiButton border;
@@ -33,7 +33,11 @@ public class positionEditorGui extends GuiScreen {
     private GuiSlider b;
     private GuiSlider a;
     private List<Gui> colorCat = new ArrayList<>();
-    private static List<Integer> currentRGBA = new ArrayList<>(Arrays.asList(0,0,0,0));
+    private static List<Integer> currentRGBA = new ArrayList<>(Arrays.asList(0, 0, 0, 0));
+    private GuiButton spaceQuests;
+    private GuiButton textOutline;
+    private GuiSlider textScale;
+
     private static int settingColors = 0;
     private static Point oldInfoPos = new Point(0, 0);
 
@@ -46,28 +50,36 @@ public class positionEditorGui extends GuiScreen {
     public void initGui() {
         super.initGui();
         close = new GuiButton(0, width / 2 - 75, height / 6 * 5, 150, 20, "Close");
-        infoWidth = new GuiSlider(1, width / 2 - 75, height / 6, 150, 20, "info Width: ", "", 1, 500, Config.infoWidth.x, false, true);
-        infoHeight = new GuiSlider(2, width / 2 - 75, height / 6 + 25, 150, 20, "Minimum info Height: ", "", 1, 500, Config.infoWidth.y, false, true);
-        border = new GuiButton(3, width / 2 - 75, height / 6 + 50, 150, 20, "Border: " + Config.understandMe(Config.infoBorder));
-        borderThickness = new GuiSlider(2, width / 2 - 75, height / 6 + 75, 150, 20, "Border thickness: ", "", 0, 70, Config.borderThickness * 10, true, true);
-        infoColor = new GuiButton(5, width / 2 - 75, height / 6 + 100, 150, 20, "Set info Color");
-        borderColor = new GuiButton(6, width / 2 - 75, height / 6 + 125, 150, 20, "Set border Color");
+        toggle = new GuiButton(0, width / 2 - 75, height / 6, 150, 20, "Toggle info gui: " + Config.understandMe(Config.infoToggle));
+        infoWidth = new GuiSlider(2, width / 2 - 75, height / 6 + 25, 150, 20, "Info width: ", "", 1, 500, Config.infoWidth.x, false, true);
+        infoHeight = new GuiSlider(3, width / 2 - 75, height / 6 + 50, 150, 20, "Minimum info height: ", "", 1, 500, Config.infoWidth.y, false, true);
+        border = new GuiButton(4, width / 2 - 75, height / 6 + 75, 150, 20, "Border: " + Config.understandMe(Config.infoBorder));
+        borderThickness = new GuiSlider(5, width / 2 - 75, height / 6 + 100, 150, 20, "Border thickness: ", "", 0, 100, Config.infoBorderThickness * 10, false, true);
+        infoColor = new GuiButton(6, width / 2 - 75, height / 6 + 125, 150, 20, "Set info color");
+        borderColor = new GuiButton(7, width / 2 - 75, height / 6 + 150, 150, 20, "Set border color");
+        spaceQuests = new GuiButton(8, width / 2 - 75, height / 6 + 175, 150, 20, "Quest spacing: " + Config.understandMe(Config.spaceQuests));
+        textOutline = new GuiButton(9, width / 2 - 75, height / 6 + 200, 150, 20, "Text outline: " + Config.intToName(Config.infoTextOutline));
+        textScale = new GuiSlider(10, width / 2 - 75, height / 6 + 225, 150, 20, "Text scale: ", "", 1, 50, Config.infoTextScale * 10, false, true);
 
-        r = new GuiSlider(10, 0, 0, 150, 20, "Red: ", "", 0, 255, 0, false, true);
-        g = new GuiSlider(11, 0, 0, 150, 20, "Green: ", "", 0, 255, 0, false, true);
-        b = new GuiSlider(12, 0, 0, 150, 20, "Blue: ", "", 0, 255, 0, false, true);
-        a = new GuiSlider(13, 0, 0, 150, 20, "Alpha: ", "", 0, 255, 0, false, true);
+        r = new GuiSlider(20, 0, 0, 150, 20, "Red: ", "", 0, 255, 0, false, true);
+        g = new GuiSlider(21, 0, 0, 150, 20, "Green: ", "", 0, 255, 0, false, true);
+        b = new GuiSlider(22, 0, 0, 150, 20, "Blue: ", "", 0, 255, 0, false, true);
+        a = new GuiSlider(23, 0, 0, 150, 20, "Alpha: ", "", 0, 255, 0, false, true);
         colorCat = new ArrayList<>(Arrays.asList(r, g, b, a));
         settingColors = 0;
 
 
         this.buttonList.add(close);
+        this.buttonList.add(toggle);
         this.buttonList.add(infoWidth);
         this.buttonList.add(infoHeight);
         this.buttonList.add(border);
         this.buttonList.add(borderThickness);
         this.buttonList.add(infoColor);
         this.buttonList.add(borderColor);
+        this.buttonList.add(spaceQuests);
+        this.buttonList.add(textOutline);
+        this.buttonList.add(textScale);
 
         oldInfoPos = Config.infoPos;
         positionEditorOpened = true;
@@ -109,8 +121,8 @@ public class positionEditorGui extends GuiScreen {
             if (init) currentRGBA = Utils.colorToList(Config.infoColor);
             else Config.infoColor = Utils.listTocolor(currentRGBA);
         } else if (button == 2) {
-            if (init) currentRGBA = Utils.colorToList(Config.borderColor);
-            else Config.borderColor = Utils.listTocolor(currentRGBA);
+            if (init) currentRGBA = Utils.colorToList(Config.infoBorderColor);
+            else Config.infoBorderColor = Utils.listTocolor(currentRGBA);
         }
     }
 
@@ -124,7 +136,9 @@ public class positionEditorGui extends GuiScreen {
         } else if (infoHeight.dragging) {
             Config.infoWidth = new Point(Config.infoWidth.x, infoHeight.getValueInt());
         } else if (borderThickness.dragging) {
-            Config.borderThickness = borderThickness.getValue() / 10D;
+            Config.infoBorderThickness = borderThickness.getValue() / 10D;
+        } else if (textScale.dragging) {
+            Config.infoTextScale = textScale.getValue() / 10D;
         } else if (settingColors != 0) {
             boolean save = true;
             if (r.dragging) {
@@ -139,20 +153,16 @@ public class positionEditorGui extends GuiScreen {
             if (save) setColorList(false, settingColors);
         }
 
-        ScaledResolution sr = new ScaledResolution(mc);
-        int height = sr.getScaledHeight();
-        int width = sr.getScaledWidth();
-
-        String text1 = "§lPress enter to save info position for (clicked) cursor position";
-        int text1Width = mc.fontRendererObj.getStringWidth(text1);
-        TextRenderer.drawText(mc, EnumChatFormatting.WHITE + text1, width / 2 - text1Width / 2, height / 6 - 15, 1D, false);
+        String text = "§r§lPress enter to save info position for (clicked) cursor position";
+        float textWidth = mc.fontRendererObj.getStringWidth(text);
+        RenderUtils.drawText(mc, text, width / 2 - textWidth / 2, height / 6 - 15, 1D, 1);
 
         QuestInfo.renderInfo();
     }
 
     @Override
     public void handleMouseInput() throws IOException {
-        if (positionEditorOpened &! buttonSelected()) {
+        if (positionEditorOpened &! buttonSelected() && Mouse.isButtonDown(0)) {
             int mouseX = Mouse.getEventX() * this.width / this.mc.displayWidth;
             int mouseY = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
             Config.infoPos = new Point(mouseX, mouseY);
@@ -161,9 +171,10 @@ public class positionEditorGui extends GuiScreen {
     }
 
     private boolean buttonSelected() {
-        return close.isMouseOver() || infoWidth.isMouseOver() || infoWidth.dragging || infoHeight.isMouseOver() || infoHeight.dragging || border.isMouseOver()
+        return close.isMouseOver() || toggle.isMouseOver() || infoWidth.isMouseOver() || infoWidth.dragging || infoHeight.isMouseOver() || infoHeight.dragging || border.isMouseOver()
                 || borderThickness.isMouseOver() || borderThickness.dragging || infoColor.isMouseOver() || borderColor.isMouseOver()
-                || r.isMouseOver() || r.dragging || g.isMouseOver() || g.dragging || b.isMouseOver() || b.dragging || a.isMouseOver() || a.dragging;
+                || r.isMouseOver() || r.dragging || g.isMouseOver() || g.dragging || b.isMouseOver() || b.dragging || a.isMouseOver() || a.dragging
+                || spaceQuests.isMouseOver() || textOutline.isMouseOver() || textScale.isMouseOver() || textScale.dragging;
     }
 
     @Override
@@ -177,7 +188,11 @@ public class positionEditorGui extends GuiScreen {
     @Override
     public void actionPerformed(GuiButton button) {
         if (button == close) mc.thePlayer.closeScreen();
-        else if (button == border) {
+        else if (button == toggle) {
+            Config.infoToggle =! Config.infoToggle;
+            Config.writeBooleanConfig("info", "toggle", Config.infoToggle);
+            toggle.displayString = "Toggle info gui: " + Config.understandMe(Config.infoToggle);
+        } else if (button == border) {
             Config.infoBorder =! Config.infoBorder;
             Config.writeBooleanConfig("info", "border", Config.infoBorder);
             border.displayString = "Border: " + Config.understandMe(Config.infoBorder);
@@ -185,6 +200,14 @@ public class positionEditorGui extends GuiScreen {
             RGBAState(1);
         } else if (button == borderColor) {
             RGBAState(2);
+        } else if (button == spaceQuests) {
+            Config.spaceQuests =! Config.spaceQuests;
+            Config.writeBooleanConfig("info", "spaceQuests", Config.spaceQuests);
+            spaceQuests.displayString = "Quest spacing: " + Config.understandMe(Config.spaceQuests);
+        } else if (button == textOutline) {
+            Config.infoTextOutline = (Config.infoTextOutline + 1) % 3;
+            Config.writeIntConfig("info", "textOutline", Config.infoTextOutline);
+            textOutline.displayString = "Text outline: " + Config.intToName(Config.infoTextOutline);
         }
     }
 
@@ -196,9 +219,10 @@ public class positionEditorGui extends GuiScreen {
         Config.writeIntConfig("info", "posY", Config.infoPos.y);
         Config.writeIntConfig("info", "width", Config.infoWidth.x);
         Config.writeIntConfig("info", "height", Config.infoWidth.y);
-        Config.writeDoubleConfig("info", "borderThickness", Config.borderThickness);
+        Config.writeDoubleConfig("info", "borderThickness", Config.infoBorderThickness);
         Config.writeIntListConfig("info", "backgroundColor", Utils.colorToList(Config.infoColor));
-        Config.writeIntListConfig("info", "borderColor", Utils.colorToList(Config.borderColor));
+        Config.writeIntListConfig("info", "borderColor", Utils.colorToList(Config.infoBorderColor));
+        Config.writeDoubleConfig("info", "textScale", Config.infoTextScale);
     }
 }
 

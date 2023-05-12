@@ -1,12 +1,16 @@
 package com.QuestMaster.utils;
 
+import com.QuestMaster.config.Config;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.StringUtils;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
+import java.util.List;
 
 public class RenderUtils {
     static Tessellator tessellator = Tessellator.getInstance();
@@ -55,5 +59,32 @@ public class RenderUtils {
         addQuadVertices(x - thickness, y + h, w + thickness * 2, thickness);
         tessellator.draw();
         disableStuff();
+    }
+
+    public static void renderTextList(Minecraft mc, List<String> list, float x, float y, double scale, int outline) {
+        for (int i = 0; i < list.size(); i++) {
+            drawText(mc, list.get(i), x, y + (float) (i * 11f * Config.infoTextScale), scale, outline);
+        }
+    }
+
+    //from DungeonRoooms under the GNU 3.0 license
+    public static void drawText(Minecraft mc, String text, float x, float y, double scale, int outline) {
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(scale, scale, scale);
+        for (String line : text.split("\n")) {
+            if (outline == 2) {
+                String noColourLine = StringUtils.stripControlCodes(line);
+                mc.fontRendererObj.drawString(noColourLine, (int) Math.round(x / scale) - 1, (int) Math.round(y / scale), 0x000000, false);
+                mc.fontRendererObj.drawString(noColourLine, (int) Math.round(x / scale) + 1, (int) Math.round(y / scale), 0x000000, false);
+                mc.fontRendererObj.drawString(noColourLine, (int) Math.round(x / scale), (int) Math.round(y / scale) - 1, 0x000000, false);
+                mc.fontRendererObj.drawString(noColourLine, (int) Math.round(x / scale), (int) Math.round(y / scale) + 1, 0x000000, false);
+                mc.fontRendererObj.drawString(line, (int) Math.round(x / scale), (int) Math.round(y / scale), 0xFFFFFF, false);
+            } else {
+                mc.fontRendererObj.drawString(line, (int) Math.round(x / scale), (int) Math.round(y / scale), 0xFFFFFF, outline == 1);
+            }
+            y += mc.fontRendererObj.FONT_HEIGHT * scale;
+        }
+        GlStateManager.popMatrix();
+        GlStateManager.color(1, 1, 1, 1);
     }
 }
