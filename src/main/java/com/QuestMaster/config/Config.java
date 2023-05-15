@@ -18,7 +18,7 @@ public class Config {
 
 
     public static boolean autoEnableQuests = true;
-
+    public static boolean disableLast = true;
 
 
     public static boolean infoToggle = true;

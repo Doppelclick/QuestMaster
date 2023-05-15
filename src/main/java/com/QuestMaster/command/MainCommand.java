@@ -2,8 +2,8 @@ package com.QuestMaster.command;
 
 import com.QuestMaster.QuestMaster;
 import com.QuestMaster.config.Config;
-import com.QuestMaster.gui.InfoEditorGui;
-import com.QuestMaster.gui.QuestInfo;
+import com.QuestMaster.gui.*;
+import com.QuestMaster.utils.FileUtils;
 import com.QuestMaster.utils.Utils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -17,11 +17,12 @@ import java.util.List;
 public class MainCommand extends CommandBase {
     static String help() {
         return "§bQuestMaster§r (/questmaster, /qm)\n"
-                + " /qm help §7| This message§r\n"
-                + " /qm toggle §7| Toggle the mod§r (" + Config.understandMe(Config.modToggle) + ")\n"
-                + " /qm reload §7| Reload Config from file§r\n"
-                + " /qm infogui §7| Edit the info position§r";
-
+                + " - help §7| This message§r\n"
+                + " - toggle §7| Toggle the mod§r (" + Config.understandMe(Config.modToggle) + ")\n"
+                + " - main §7| Main gui and quests§r\n"
+                + " - config §7| General config gui§r\n"
+                + " - info §7| Edit the info display position and config§r\n"
+                + " - reload §7| Reload config and quests from file§r";
     }
 
     @Override
@@ -47,7 +48,7 @@ public class MainCommand extends CommandBase {
     @Override
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] strings, BlockPos pos) {
         if (strings.length == 1) {
-            return getListOfStringsMatchingLastWord(strings, "help", "toggle", "reload", "infogui");
+            return getListOfStringsMatchingLastWord(strings, "help", "toggle", "main", "config", "info", "reload");
         }
         return null;
     }
@@ -55,7 +56,7 @@ public class MainCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender iCommandSender, String[] strings) throws CommandException {
         if (strings.length < 1) {
-            Utils.sendModMessage(new ChatComponentText(help()));
+            new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new MainGui()))).start();
         } else {
             switch (strings[0].toLowerCase()) {
                 case "toggle":
@@ -64,12 +65,55 @@ public class MainCommand extends CommandBase {
                     Config.writeBooleanConfig("general", "modToggle", Config.modToggle);
                     break;
 
-                case "reload":
-                    Config.cfgReload();
+                case "main":
+                case "gui":
+                case "maingui":
+                    new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new MainGui()))).start();
                     break;
 
+                case "config":
+                case "configgui":
+                    new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new GeneralConfigGui()))).start();
+                    break;
+
+                case "info":
                 case "infogui":
                     new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new InfoEditorGui()))).start();
+                    break;
+
+                case "reload":
+                    Config.cfgReload();
+                    FileUtils.loadQuests();
+                    break;
+
+                case "configcommand":
+                    if (strings.length < 2) return;
+                    switch (strings[1].toLowerCase()) {
+                        case "deletecategory":
+                            CategoryGui.deleteCategory();
+                            GuiManager.lastgui = "main";
+                            break;
+                        case "canceldeletecategory":
+                            CategoryGui.deleting = false;
+                            Utils.sendModMessage("§aCancelled category deletion");
+                            break;
+                        case "deletequest":
+                            QuestCreatorGui.deleteQuest();
+                            GuiManager.lastgui = "category";
+                            break;
+                        case "canceldeletequest":
+                            QuestCreatorGui.deleting = false;
+                            Utils.sendModMessage("§aCancelled quest deletion");
+                            break;
+                        case "deletequestelement":
+                            QuestElementCreatorGui.deleteElement();
+                            GuiManager.lastgui = "quest";
+                            break;
+                        case "canceldeletequestelement":
+                            QuestElementCreatorGui.deleting = false;
+                            Utils.sendModMessage("§aCancelled quest element deletion");
+                            break;
+                    }
                     break;
 
                 default:

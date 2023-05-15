@@ -48,12 +48,7 @@ public class QuestMaster {
     public static Island island = Island.NONE;
     public static String area = "unknown";
 
-    public static HashMap<String, List<Quest>> quests = new HashMap<String, List<Quest>>(){{
-       put("testCategory", Collections.singletonList(new Quest("testQuest", true, true) {{
-           add(new QuestElement("test this thing 1", new Trigger(), new Vector3f(0,0,0)));
-           add(new QuestElement("try out this 2", new Trigger(), new Vector3f(0,10,0)));
-       }}));
-    }};
+    public static HashMap<String, List<Quest>> quests = new HashMap<>();
 
     @Mod.EventHandler
     void preInit(final FMLPreInitializationEvent event) {
@@ -66,7 +61,7 @@ public class QuestMaster {
         Config.cfgReload();
         int fileDelStat = FileUtils.deleteBinned();
 
-        int questLoadStat = 0; // FileUtils.loadQuests(); todo: re-enable
+        int questLoadStat = FileUtils.loadQuests();
 
         logger.info("Finished init, deleted " + fileDelStat + " binned files from yesterday or older, loaded " + questLoadStat + " quests.");
     }
@@ -75,7 +70,7 @@ public class QuestMaster {
     void serverConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
         if (mc.getCurrentServerData() == null) return;
         if (mc.getCurrentServerData().serverIP.toLowerCase().contains("hypixel.")) {
-            event.manager.channel().pipeline().addBefore("packet_handler", "diana_packet_handler", new PacketHandler());
+            event.manager.channel().pipeline().addBefore("packet_handler", "questmaster_packet_handler", new PacketHandler());
             logger.info("Added Hypixel packet handler, searching for updates");
             updateThread();
         }
@@ -95,7 +90,7 @@ public class QuestMaster {
                 @Override
                 public void run() {
                     try {
-                        URL url = new URL("https://api.github.com/repos/Doppelclick/Diana/releases/latest");
+                        URL url = new URL("https://api.github.com/repos/Doppelclick/QuestMaster/releases/latest");
                         URLConnection request = url.openConnection();
                         request.connect();
                         JsonParser json = new JsonParser();
@@ -107,10 +102,10 @@ public class QuestMaster {
 
                         if (currentVersion.compareTo(latestVersion) < 0) {
                             logger.info("Update available");
-                            String releaseURL = "https://github.com/Doppelclick/Diana/releases/latest";
+                            String releaseURL = "https://github.com/Doppelclick/QuestMaster/releases/latest";
                             ChatComponentText update = new ChatComponentText("§l§2  [UPDATE]  ");
                             update.setChatStyle(update.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, releaseURL)).setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("github - " + latestVersion))));
-                            Utils.sendModMessage(new ChatComponentText(chatTitle + "§cSolver is outdated. Please update to " + latestTag + ".\n").appendSibling(update));
+                            Utils.sendModMessage(new ChatComponentText(chatTitle + "§cQuestMaster is outdated. Please update to " + latestTag + ".\n").appendSibling(update));
                         } else logger.info("No update found");
                     } catch (Exception e) {
                         logger.warn("An error has occurred connecting to github");

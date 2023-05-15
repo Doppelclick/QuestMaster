@@ -26,7 +26,7 @@ public class ClickPos extends Trigger {
     }
 
     @Override
-    public boolean checkTrigger(Packet clickPos) {
+    public boolean checkTrigger(Packet<?> clickPos) {
         BlockPos pos = null;
         int mb = -1;
         if (clickPos instanceof C07PacketPlayerDigging) {
@@ -36,7 +36,7 @@ public class ClickPos extends Trigger {
             pos = ((C08PacketPlayerBlockPlacement) clickPos).getPosition();
             mb = 2;
         }
-        if (pos != null && (mouseButton == 0 || mouseButton == mb)) {
+        if (pos != null && (mouseButton == -1 || mouseButton == mb)) {
             if (pos.equals(new BlockPos(Utils.serializableToVec3(position)))) {
                 if (heldItemName.equals("any")) ;
                 else if (QuestMaster.mc.thePlayer.getHeldItem() == null) {

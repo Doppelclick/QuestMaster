@@ -14,11 +14,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FileUtils {
+    public static String questDir = Config.configDir + "Quests/";
 
     public static boolean deleteFile(String fullDir) {
         File delete = new File(fullDir);
         String[] split = fullDir.split("/");
-        String fileName = split[split.length - 1];
+        String fileName = split[split.length - 1].replaceAll("\\.\\S+", "");
         if (!delete.exists() |! fullDir.contains(Config.configDir)) {
             QuestMaster.mc.thePlayer.addChatMessage(new ChatComponentText("Could not locate File " + fullDir));
             return false;
@@ -27,7 +28,7 @@ public class FileUtils {
         if (!newdir.exists()) newdir.mkdirs();
         LocalDateTime now = LocalDateTime.now();
         String time = now.getDayOfMonth() + "-" + now.getMonthValue() + "-" + now.getYear() + "--" + now.getHour() + "-" + now.getMinute() + "-" + now.getSecond();
-        return delete.renameTo(new File(newdir + "/" + fileName + "_d_" + time + ".cfg"));
+        return delete.renameTo(new File(newdir + "/" + fileName + "_d_" + time + ".bin"));
     }
 
     public static boolean renameFile(String dir, String newdir) {
@@ -64,24 +65,28 @@ public class FileUtils {
         return deleted;
     }
 
-    public static void save(Quest quest, String dir, String filename) {
+    public static boolean save(Quest quest, String dir, String filename) {
         try {
             new File(dir).mkdirs();
             ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(Paths.get(dir + filename)));
             out.writeObject(quest);
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
 
     public static Quest load(String filename) {
         try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(Paths.get(filename)))) {
-            return (Quest) in.readObject();
+            Object object = in.readObject();
+            if (object instanceof Quest) return (Quest) object;
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
         }
+        return null;
     }
+
     public static int loadQuests() {
         File questDir = new File(Config.configDir + "Quests/");
         QuestMaster.quests.clear();
@@ -89,14 +94,16 @@ public class FileUtils {
         try {
             for (File dir : Objects.requireNonNull(questDir.listFiles())) {
                 if (dir.isDirectory()) {
-                    String[] parts = dir.getPath().split("/");
+                    String[] parts = dir.getPath().split("\\\\");
                     String directory = parts[parts.length - 1];
+                    QuestMaster.quests.put(directory, new ArrayList<>());
                     for (File file : Objects.requireNonNull(dir.listFiles())) {
                         if (file.getPath().endsWith(".bin")) {
                             Quest quest = load(file.getPath());
-                            if (QuestMaster.quests.containsKey(directory)) QuestMaster.quests.get(directory).add(quest);
-                            else QuestMaster.quests.put(directory, new ArrayList<>(Collections.singletonList(quest)));
-                            questAmount++;
+                            if (quest != null) {
+                                QuestMaster.quests.get(directory).add(quest);
+                                questAmount++;
+                            }
                         }
                     }
                 }
@@ -108,11 +115,10 @@ public class FileUtils {
     }
 
     public static void saveQuests() {
-        String questDir = Config.configDir + "Quests/";
         try {
             for (Map.Entry<String, List<Quest>> dir : QuestMaster.quests.entrySet()) {
                 for (Quest quest : dir.getValue()) {
-                    save(quest, questDir + dir.getKey() + "/",  quest.name + ".bin");
+                    save(quest, questDir + dir.getKey() + "/", quest.name + ".bin");
                 }
             }
         } catch (Exception e) {

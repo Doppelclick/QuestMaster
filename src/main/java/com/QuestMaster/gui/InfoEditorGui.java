@@ -1,5 +1,6 @@
 package com.QuestMaster.gui;
 
+import com.QuestMaster.QuestMaster;
 import com.QuestMaster.config.Config;
 import com.QuestMaster.utils.RenderUtils;
 import com.QuestMaster.utils.Utils;
@@ -7,7 +8,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.fml.client.config.GuiSlider;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -19,8 +19,10 @@ import java.util.Arrays;
 import java.util.List;
 
 public class InfoEditorGui extends GuiScreen {
-    private static boolean positionEditorOpened = false;
+    public static boolean guiOpened = false;
+
     private GuiButton close;
+    private GuiButton back;
     private GuiButton toggle;
     private GuiSlider infoWidth;
     private GuiSlider infoHeight;
@@ -49,17 +51,21 @@ public class InfoEditorGui extends GuiScreen {
     @Override
     public void initGui() {
         super.initGui();
+        GuiManager.lastgui = "info";
+        guiOpened = true;
+
         close = new GuiButton(0, width / 2 - 75, height / 6 * 5, 150, 20, "Close");
-        toggle = new GuiButton(0, width / 2 - 75, height / 6, 150, 20, "Toggle info gui: " + Config.understandMe(Config.infoToggle));
-        infoWidth = new GuiSlider(2, width / 2 - 75, height / 6 + 25, 150, 20, "Info width: ", "", 1, 500, Config.infoWidth.x, false, true);
-        infoHeight = new GuiSlider(3, width / 2 - 75, height / 6 + 50, 150, 20, "Minimum info height: ", "", 1, 500, Config.infoWidth.y, false, true);
-        border = new GuiButton(4, width / 2 - 75, height / 6 + 75, 150, 20, "Border: " + Config.understandMe(Config.infoBorder));
-        borderThickness = new GuiSlider(5, width / 2 - 75, height / 6 + 100, 150, 20, "Border thickness: ", "", 0, 100, Config.infoBorderThickness * 10, false, true);
-        infoColor = new GuiButton(6, width / 2 - 75, height / 6 + 125, 150, 20, "Set info color");
-        borderColor = new GuiButton(7, width / 2 - 75, height / 6 + 150, 150, 20, "Set border color");
-        spaceQuests = new GuiButton(8, width / 2 - 75, height / 6 + 175, 150, 20, "Quest spacing: " + Config.understandMe(Config.spaceQuests));
-        textOutline = new GuiButton(9, width / 2 - 75, height / 6 + 200, 150, 20, "Text outline: " + Config.intToName(Config.infoTextOutline));
-        textScale = new GuiSlider(10, width / 2 - 75, height / 6 + 225, 150, 20, "Text scale: ", "", 1, 50, Config.infoTextScale * 10, false, true);
+        back = new GuiButton(1, width / 2 + 300, height / 6 * 5, 150, 20, "Back");
+        toggle = new GuiButton(2, width / 2 - 75, height / 6, 150, 20, "Toggle info gui: " + Config.understandMe(Config.infoToggle));
+        infoWidth = new GuiSlider(3, width / 2 - 75, height / 6 + 25, 150, 20, "Info width: ", "", 1, 500, Config.infoWidth.x, false, true);
+        infoHeight = new GuiSlider(4, width / 2 - 75, height / 6 + 50, 150, 20, "Minimum info height: ", "", 1, 500, Config.infoWidth.y, false, true);
+        border = new GuiButton(5, width / 2 - 75, height / 6 + 75, 150, 20, "Border: " + Config.understandMe(Config.infoBorder));
+        borderThickness = new GuiSlider(6, width / 2 - 75, height / 6 + 100, 150, 20, "Border thickness: ", "", 0, 100, Config.infoBorderThickness * 10, false, true);
+        infoColor = new GuiButton(7, width / 2 - 75, height / 6 + 125, 150, 20, "Set info color");
+        borderColor = new GuiButton(8, width / 2 - 75, height / 6 + 150, 150, 20, "Set border color");
+        spaceQuests = new GuiButton(9, width / 2 - 75, height / 6 + 175, 150, 20, "Quest spacing: " + Config.understandMe(Config.spaceQuests));
+        textOutline = new GuiButton(10, width / 2 - 75, height / 6 + 200, 150, 20, "Text outline: " + Config.intToName(Config.infoTextOutline));
+        textScale = new GuiSlider(11, width / 2 - 75, height / 6 + 225, 150, 20, "Text scale: ", "", 1, 50, Config.infoTextScale * 10, false, true);
 
         r = new GuiSlider(20, 0, 0, 150, 20, "Red: ", "", 0, 255, 0, false, true);
         g = new GuiSlider(21, 0, 0, 150, 20, "Green: ", "", 0, 255, 0, false, true);
@@ -82,7 +88,6 @@ public class InfoEditorGui extends GuiScreen {
         this.buttonList.add(textScale);
 
         oldInfoPos = Config.infoPos;
-        positionEditorOpened = true;
     }
 
     private void RGBAState(int buttonState) {
@@ -155,14 +160,14 @@ public class InfoEditorGui extends GuiScreen {
 
         String text = "§r§lPress enter to save info position for (clicked) cursor position";
         float textWidth = mc.fontRendererObj.getStringWidth(text);
-        RenderUtils.drawText(mc, text, width / 2 - textWidth / 2, height / 6 - 15, 1D, 1);
+        RenderUtils.drawText(mc, text, width / 2 - textWidth / 2, height / 6 - 15, 1D, 0);
 
         QuestInfo.renderInfo();
     }
 
     @Override
     public void handleMouseInput() throws IOException {
-        if (positionEditorOpened &! buttonSelected() && Mouse.isButtonDown(0)) {
+        if (!buttonSelected() && Mouse.isButtonDown(0)) {
             int mouseX = Mouse.getEventX() * this.width / this.mc.displayWidth;
             int mouseY = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
             Config.infoPos = new Point(mouseX, mouseY);
@@ -188,6 +193,7 @@ public class InfoEditorGui extends GuiScreen {
     @Override
     public void actionPerformed(GuiButton button) {
         if (button == close) mc.thePlayer.closeScreen();
+        else if (button == back) new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new MainGui()))).start();
         else if (button == toggle) {
             Config.infoToggle =! Config.infoToggle;
             Config.writeBooleanConfig("info", "toggle", Config.infoToggle);
@@ -213,7 +219,8 @@ public class InfoEditorGui extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        positionEditorOpened = false;
+        guiOpened = false;
+
         Config.infoPos = oldInfoPos;
         Config.writeIntConfig("info", "posX", Config.infoPos.x);
         Config.writeIntConfig("info", "posY", Config.infoPos.y);

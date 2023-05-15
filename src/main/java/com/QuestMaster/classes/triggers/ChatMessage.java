@@ -1,6 +1,7 @@
 package com.QuestMaster.classes.triggers;
 
 import com.QuestMaster.classes.Trigger;
+import com.QuestMaster.utils.Utils;
 import net.minecraft.util.StringUtils;
 
 import java.util.HashMap;
@@ -36,12 +37,13 @@ public class ChatMessage extends Trigger {
     }
 
     @Override
-    public boolean checkTrigger(String m) {
-        String message = this.colorCodes ? m : StringUtils.stripControlCodes(m);
+    public boolean checkTrigger(String message) {
+        String msg = this.colorCodes ? message : StringUtils.stripControlCodes(message);
         int found = 0;
         for (Map.Entry<String, Boolean> pattern : this.patterns.entrySet()) {
             if (!pattern.getValue()) {
-                Matcher matcher = Pattern.compile(pattern.getKey()).matcher(message);
+                Matcher matcher = Pattern.compile(pattern.getKey()).matcher(msg);
+                Utils.sendModMessage(msg + " " + pattern.getKey());
                 if (matcher.find()) {
                     this.patterns.put(pattern.getKey(), true);
                     found++;

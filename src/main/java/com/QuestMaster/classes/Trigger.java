@@ -2,7 +2,6 @@ package com.QuestMaster.classes;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.Packet;
-import net.minecraft.util.Vec3;
 
 import javax.vecmath.Vector3f;
 import java.io.Serializable;
@@ -14,8 +13,8 @@ public class Trigger implements Serializable {
             return checkTrigger((String) object);
         } else if (object instanceof Vector3f) {
             return checkTrigger((Vector3f) object);
-        } else if (object instanceof Packet) {
-            return checkTrigger((Packet) object);
+        } else if (object instanceof Packet<?>) {
+            return checkTrigger((Packet<?>) object);
         } else if (object instanceof ItemStack) {
             return checkTrigger((ItemStack) object);
         }
@@ -30,7 +29,7 @@ public class Trigger implements Serializable {
         return false;
     }
 
-    public boolean checkTrigger(Packet clickedPos) {
+    public boolean checkTrigger(Packet<?> clickedPos) {
         return false;
     }
 

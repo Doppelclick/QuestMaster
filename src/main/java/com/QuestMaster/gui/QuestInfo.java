@@ -15,14 +15,14 @@ import java.util.Map;
 
 public class QuestInfo {
     @SubscribeEvent
-    void onRenderOverlay(RenderGameOverlayEvent.Pre event) {
-        if (!Config.modToggle |! Config.infoToggle || QuestMaster.mc.thePlayer == null) return;
+    void onRenderOverlay(RenderGameOverlayEvent.Post event) {
+        if (event.type != RenderGameOverlayEvent.ElementType.ALL |! Config.modToggle |! Config.infoToggle || QuestMaster.mc.thePlayer == null) return;
         renderInfo();
     }
 
     public static void renderInfo() {
         List<String> strings = calculateStrings();
-        if (strings.isEmpty()) return;
+        if (strings.isEmpty() &! InfoEditorGui.guiOpened) return;
         RenderUtils.renderRect(Config.infoPos.x, Config.infoPos.y, Config.infoWidth.x, Math.max(Config.infoWidth.y, strings.size() * 11f * Config.infoTextScale + 2f * Config.infoTextScale), Config.infoColor);
         if (Config.infoBorder) RenderUtils.renderRectBorder(Config.infoPos.x, Config.infoPos.y, Config.infoWidth.x, Math.max(Config.infoWidth.y, strings.size() * 11f * Config.infoTextScale + 2f * Config.infoTextScale), Config.infoBorderThickness, Config.infoBorderColor);
         RenderUtils.renderTextList(QuestMaster.mc, strings, Config.infoPos.x + (float)(2f * Config.infoTextScale), Config.infoPos.y + (float)(2f * Config.infoTextScale), Config.infoTextScale, Config.infoTextOutline);
