@@ -76,6 +76,7 @@ public class InfoEditorGui extends GuiScreen {
 
 
         this.buttonList.add(close);
+        this.buttonList.add(back);
         this.buttonList.add(toggle);
         this.buttonList.add(infoWidth);
         this.buttonList.add(infoHeight);
@@ -96,7 +97,7 @@ public class InfoEditorGui extends GuiScreen {
 
         if (shouldInit &! shouldDisable) {
             setColorList(true, buttonState);
-            GuiManager.displaycategory(colorCat, width / 2 + 200, height / 6 + 25, 150, true);
+            GuiManager.displaycategory(colorCat, width / 2f + 200, height / 6f + 25, 150, true);
             for (int i = 0; i < 4; i++) {
                 ((GuiSlider) colorCat.get(i)).setValue(currentRGBA.get(i));
                 ((GuiSlider) colorCat.get(i)).updateSlider();
@@ -136,6 +137,21 @@ public class InfoEditorGui extends GuiScreen {
         Minecraft mc = Minecraft.getMinecraft();
         super.drawScreen(mouseX, mouseY, partialTicks);
 
+        String text = "§r§lPress enter to save info position for (clicked) cursor position";
+        float textWidth = mc.fontRendererObj.getStringWidth(text);
+        RenderUtils.drawText(mc, text, width / 2f - textWidth / 2, height / 6f - 15, 1D, 0);
+    }
+
+    @Override
+    protected void mouseClickMove(int mouseX, int mouseY, int clickButton, long time) {
+        super.mouseClickMove(mouseX, mouseY, clickButton, time);
+
+        if (!buttonSelected() && Mouse.isButtonDown(0)) {
+            int mx = Mouse.getEventX() * this.width / this.mc.displayWidth;
+            int my = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
+            Config.infoPos = new Point(mx, my);
+        }
+
         if (infoWidth.dragging) {
             Config.infoWidth = new Point(infoWidth.getValueInt(), Config.infoWidth.y);
         } else if (infoHeight.dragging) {
@@ -157,22 +173,6 @@ public class InfoEditorGui extends GuiScreen {
             } else save = false;
             if (save) setColorList(false, settingColors);
         }
-
-        String text = "§r§lPress enter to save info position for (clicked) cursor position";
-        float textWidth = mc.fontRendererObj.getStringWidth(text);
-        RenderUtils.drawText(mc, text, width / 2 - textWidth / 2, height / 6 - 15, 1D, 0);
-
-        QuestInfo.renderInfo();
-    }
-
-    @Override
-    public void handleMouseInput() throws IOException {
-        if (!buttonSelected() && Mouse.isButtonDown(0)) {
-            int mouseX = Mouse.getEventX() * this.width / this.mc.displayWidth;
-            int mouseY = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
-            Config.infoPos = new Point(mouseX, mouseY);
-        }
-        super.handleMouseInput();
     }
 
     private boolean buttonSelected() {

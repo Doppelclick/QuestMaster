@@ -1,6 +1,7 @@
 package com.QuestMaster.utils;
 
 import com.QuestMaster.config.Config;
+import com.QuestMaster.gui.QuestInfoRender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -15,6 +16,7 @@ import java.util.List;
 public class RenderUtils {
     static Tessellator tessellator = Tessellator.getInstance();
     static WorldRenderer worldRenderer = tessellator.getWorldRenderer();
+    public static float lineHeight = 11f;
     private static void addQuadVertices(double x, double y, double w, double h) {
         worldRenderer.pos(x, y + h, 0.0).endVertex();
         worldRenderer.pos(x + w, y + h, 0.0).endVertex();
@@ -63,7 +65,7 @@ public class RenderUtils {
 
     public static void renderTextList(Minecraft mc, List<String> list, float x, float y, double scale, int outline) {
         for (int i = 0; i < list.size(); i++) {
-            drawText(mc, list.get(i), x, y + (float) (i * 11f * Config.infoTextScale), scale, outline);
+            drawText(mc, list.get(i), x, y + (float) (i * lineHeight * Config.infoTextScale), scale, outline);
         }
     }
 

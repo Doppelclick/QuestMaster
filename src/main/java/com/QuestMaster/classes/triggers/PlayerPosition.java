@@ -18,14 +18,16 @@ public class PlayerPosition extends Trigger {
     }
 
     @Override
-    public boolean checkTrigger(Vector3f playerPos) {
-        if (Utils.maxDistance(playerPos, this.position) < distance) {
-            if (entered == 0) entered = System.currentTimeMillis();
-            else if (System.currentTimeMillis() - entered >= durationMillis) {
-                entered = 0;
-                return true;
-            }
-        } else if (entered != 0) entered = 0;
+    public boolean checkTrigger(Object object) {
+        if (object instanceof Vector3f) {
+            if (Utils.maxDistance((Vector3f) object, this.position) < distance) {
+                if (entered == 0) entered = System.currentTimeMillis();
+                else if (System.currentTimeMillis() - entered >= durationMillis) {
+                    entered = 0;
+                    return true;
+                }
+            } else if (entered != 0) entered = 0;
+        }
         return false;
     }
 }

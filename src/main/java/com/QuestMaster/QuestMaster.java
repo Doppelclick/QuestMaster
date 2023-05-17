@@ -2,11 +2,11 @@ package com.QuestMaster;
 
 import com.QuestMaster.classes.Island;
 import com.QuestMaster.classes.Quest;
-import com.QuestMaster.classes.QuestElement;
-import com.QuestMaster.classes.Trigger;
 import com.QuestMaster.command.MainCommand;
 import com.QuestMaster.config.Config;
+import com.QuestMaster.gui.QuestInfoRender;
 import com.QuestMaster.handlers.PacketHandler;
+import com.QuestMaster.handlers.QuestEventHandler;
 import com.QuestMaster.utils.FileUtils;
 import com.QuestMaster.utils.Utils;
 import com.google.gson.JsonObject;
@@ -28,7 +28,6 @@ import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.vecmath.Vector3f;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -57,11 +56,13 @@ public class QuestMaster {
 
     @Mod.EventHandler
     void init(FMLInitializationEvent event) {
-        MinecraftForge.EVENT_BUS.register(this);
         Config.cfgReload();
         int fileDelStat = FileUtils.deleteBinned();
-
         int questLoadStat = FileUtils.loadQuests();
+
+        MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(new QuestEventHandler());
+        MinecraftForge.EVENT_BUS.register(new QuestInfoRender());
 
         logger.info("Finished init, deleted " + fileDelStat + " binned files from yesterday or older, loaded " + questLoadStat + " quests.");
     }
@@ -75,7 +76,6 @@ public class QuestMaster {
             updateThread();
         }
     }
-
 
     void updateThread() {
         if (mc.thePlayer == null) {

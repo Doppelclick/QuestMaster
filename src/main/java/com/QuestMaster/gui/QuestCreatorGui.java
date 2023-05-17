@@ -13,10 +13,13 @@ import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.client.config.GuiSlider;
 
 import javax.vecmath.Vector3f;
+import java.awt.*;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 
 public class QuestCreatorGui extends GuiScreen {
     private GuiButton close;
@@ -24,6 +27,9 @@ public class QuestCreatorGui extends GuiScreen {
     private GuiButton saveQuest;
     private GuiButton discardQuest;
     private GuiButton deleteQuest;
+    private GuiSlider rSlider;
+    private GuiSlider gSlider;
+    private GuiSlider bSlider;
     public static boolean deleting = false;
 
 
@@ -33,14 +39,18 @@ public class QuestCreatorGui extends GuiScreen {
 
     public static boolean exists = false;
     public static boolean enabled = false;
+    public static int r = 0;
+    public static int g = 0;
+    public static int b = 0;
+
     public static String oldName = "";
     public static String name = "";
     public static String oldCategory = "";
     public static String category = "";
     public static List<QuestElement> elements = new ArrayList<>();
+    private static boolean editedElements = false;
     public static List<Gui> questElements = new ArrayList<>();
     private GuiButton newElement;
-
 
     @Override
     public boolean doesGuiPauseGame() {
@@ -63,18 +73,22 @@ public class QuestCreatorGui extends GuiScreen {
         questName.setText(name.isEmpty() ? "Set name" : name);
         categoryOwner = new GuiTextField(7, this.fontRendererObj, 0, 0, 200, 20);
         categoryOwner.setText(category.isEmpty() ? "Set category" : category);
-        List<Gui> list = Arrays.asList(enableQuest, questName, categoryOwner);
+        rSlider = new GuiSlider(8, 0, 0, 100, 20, "Red: ", "", 0, 255, r, false, true);
+        gSlider = new GuiSlider(9, 0, 0, 100, 20, "Green: ", "", 0, 255, g, false, true);
+        bSlider = new GuiSlider(10, 0, 0, 100, 20, "Blue: ", "", 0, 255, b, false, true);
+        List<Gui> list = Arrays.asList(enableQuest, questName, categoryOwner, rSlider, gSlider, bSlider);
         GuiManager.displaycategory(list, width / 2f, height / 6f);
-        setAllState(list, true);
+        enableAll(list);
 
         questElements.clear();
         for (QuestElement element : elements) {
             questElements.add(new GuiButton(90, 0, 0, 150, 20, element.name));
+            questElements.add(new GuiButton(91, 0, 0, 20, 20, Config.understandMeIcon(element.enabled)));
         }
-        newElement = new GuiButton(91, 0, 0, 150, 20, "Create new element");
+        newElement = new GuiButton(92, 0, 0, 150, 20, "Create new element");
         questElements.add(newElement);
-        GuiManager.displaycategory(questElements, width / 2f, height / 6f + 50);
-        setAllState(questElements, true);
+        GuiManager.displaycategory(questElements, width / 2f, height / 6f + 70);
+        enableAll(questElements);
 
 
         this.buttonList.add(close);
@@ -99,7 +113,7 @@ public class QuestCreatorGui extends GuiScreen {
 
         String text2 = "Quest elements: ";
         int text2Width = mc.fontRendererObj.getStringWidth(text2);
-        RenderUtils.drawText(mc, text2, (width - text2Width) / 2f, height / 6f + 35, 1, 0);
+        RenderUtils.drawText(mc, text2, (width - text2Width) / 2f, height / 6f + 55, 1, 0);
     }
 
     @Override
@@ -131,6 +145,19 @@ public class QuestCreatorGui extends GuiScreen {
     }
 
     @Override
+    protected void mouseClickMove(int mouseX, int mouseY, int clickButton, long time) {
+        super.mouseClickMove(mouseX, mouseY, clickButton, time);
+
+        if (rSlider.dragging) {
+            r = rSlider.getValueInt();
+        } else if (gSlider.dragging) {
+            g = gSlider.getValueInt();
+        } else if (bSlider.dragging) {
+            b = bSlider.getValueInt();
+        }
+    }
+
+    @Override
     public void actionPerformed(GuiButton button) {
         if (button == close) mc.thePlayer.closeScreen();
         else if (button == back) new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new CategoryGui()))).start();
@@ -145,9 +172,13 @@ public class QuestCreatorGui extends GuiScreen {
             clear();
             new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new CategoryGui()))).start();
         } else if (questElements.contains(button)) {
-            if (saveQuest()) {
+            if (questElements.indexOf(button) % 2 == 1) {
+                elements.get((questElements.indexOf(button) - 1) / 2).enabled =! elements.get((questElements.indexOf(button) - 1) / 2).enabled;
+                button.displayString = Config.understandMeIcon(elements.get((questElements.indexOf(button) - 1) / 2).enabled);
+                editedElements = true;
+            } else if (saveQuest()) {
                 if (button != newElement) {
-                    int ind = questElements.indexOf(button);
+                    int ind = questElements.indexOf(button) / 2;
                     QuestElement element = elements.get(ind);
                     QuestElementCreatorGui.loadElement(element, ind);
                 } else QuestElementCreatorGui.clear();
@@ -183,19 +214,9 @@ public class QuestCreatorGui extends GuiScreen {
         }
     }
 
-    private void setAllState(List<Gui> elements, boolean enable) {
+    private void enableAll(List<Gui> elements) {
         for (Gui element : elements) {
-            changeState(element, enable);
-        }
-    }
-
-    private void changeState(Gui element, boolean enable) {
-        if (element instanceof GuiButton) {
-            if (enable) {
-                if (!this.buttonList.contains(element)) this.buttonList.add((GuiButton) element);
-            } else {
-                this.buttonList.remove(element);
-            }
+            if (element instanceof GuiButton) this.buttonList.add((GuiButton) element);
         }
     }
 
@@ -204,7 +225,7 @@ public class QuestCreatorGui extends GuiScreen {
         String c = categoryOwner.getText();
         if (n.isEmpty() || n.equals("Set name") || c.isEmpty() || c.equals("Set category")) return false;
 
-        Quest creating = new Quest(n, enabled);
+        Quest creating = new Quest(n, enabled, new Color(r, g, b));
         creating.addAll(elements);
 
         if (QuestMaster.quests.containsKey(c)) {
@@ -222,6 +243,7 @@ public class QuestCreatorGui extends GuiScreen {
             category = oldCategory;
             exists = true;
             elements = creating;
+            editedElements = false;
         } else Utils.sendModMessage("Error saving quest " + n + " to file. Only save locally");
         return true;
     }
@@ -244,16 +266,28 @@ public class QuestCreatorGui extends GuiScreen {
     }
 
     public static void loadQuest(Quest quest, String cat) {
+        oldCategory = cat;
+        category = oldCategory;
+        deleting = false;
+        exists = true;
         if (quest != null) {
             enabled = quest.enabled;
             oldName = quest.name;
             name = oldName;
             elements = quest;
+            r = quest.color.getRed();
+            g = quest.color.getGreen();
+            b = quest.color.getBlue();
+            for (int i = 0; i < elements.size(); i++) {
+                if (elements.get(i).name.equals("END_OF_QUEST") && elements.size() -1 != i) {
+                    elements.add(elements.get(i));
+                    elements.remove(i);
+                    editedElements = true;
+
+                }
+            }
         }
-        oldCategory = cat;
-        category = oldCategory;
-        deleting = false;
-        exists = true;
+
     }
 
     public static void clear() {
@@ -265,6 +299,7 @@ public class QuestCreatorGui extends GuiScreen {
         elements = new ArrayList<>();
         deleting = false;
         exists = false;
+        editedElements = false;
     }
 
 
@@ -281,7 +316,8 @@ public class QuestCreatorGui extends GuiScreen {
 
         if (index != -1) {
             elements.remove(index);
-            elements.add(index, QuestElementCreatorGui.editing);
+            if (name.equals("END_OF_QUEST")) elements.add(QuestElementCreatorGui.editing);
+            else elements.add(index, QuestElementCreatorGui.editing);
         } else elements.add(QuestElementCreatorGui.editing);
         saveQuest();
         Utils.sendModMessage("Saved quest element " + name);
@@ -292,5 +328,6 @@ public class QuestCreatorGui extends GuiScreen {
     public void onGuiClosed() {
         name = questName.getText().equals("Set name") ? "" : questName.getText();
         category = categoryOwner.getText().equals("Set category") ? "" : categoryOwner.getText();
+        if (editedElements) saveQuest();
     }
 }

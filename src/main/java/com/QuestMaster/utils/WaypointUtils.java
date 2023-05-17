@@ -1,10 +1,13 @@
 package com.QuestMaster.utils;
 
+import com.QuestMaster.QuestMaster;
+import com.QuestMaster.config.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.*;
@@ -14,6 +17,33 @@ import java.awt.*;
 
 public class WaypointUtils {
     private static final ResourceLocation beaconBeam = new ResourceLocation("textures/entity/beacon_beam.png");
+
+    public static void renderBeacon(float partialTicks, String info, float scale, Vec3 pos, Color color) {
+        Entity viewer = QuestMaster.mc.getRenderViewEntity();
+        Frustum frustum = new Frustum();
+        frustum.setPosition(viewer.posX, viewer.posY, viewer.posZ);
+        double viewerX = viewer.lastTickPosX + (viewer.posX - viewer.lastTickPosX) * partialTicks;
+        double viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * partialTicks;
+        double viewerZ = viewer.lastTickPosZ + (viewer.posZ - viewer.lastTickPosZ) * partialTicks;
+        double x = pos.xCoord - viewerX;
+        double y = pos.yCoord - viewerY;
+        double z = pos.zCoord - viewerZ;
+        double distSq = x*x + y*y + z*z;
+
+        GlStateManager.disableDepth();
+        GlStateManager.disableCull();
+        if (distSq > 35) {
+            if (Config.beam) WaypointUtils.renderBeaconBeam(x, y + scale, z, color.getRGB(), 0.25f, partialTicks);
+        } else scale = 1;
+        if (Config.block && frustum.isBoxInFrustum(pos.xCoord, pos.yCoord, pos.zCoord, pos.xCoord + 1, pos.yCoord + 1, pos.zCoord + 1))
+            WaypointUtils.drawFilledBoundingBox(new AxisAlignedBB(x - scale + 1, y - scale + 1, z - scale + 1, x + scale, y + scale, z + scale), color, 0.4f);
+        GlStateManager.disableTexture2D();
+        if (Config.text) WaypointUtils.renderWaypointText(info, pos.addVector(0, scale,0), partialTicks, scale);
+        GlStateManager.disableLighting();
+        GlStateManager.enableTexture2D();
+        GlStateManager.enableDepth();
+        GlStateManager.enableCull();
+    }
 
     /**
      * Taken from NotEnoughUpdates under Creative Commons Attribution-NonCommercial 3.0

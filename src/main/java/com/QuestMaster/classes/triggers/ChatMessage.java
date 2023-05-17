@@ -37,22 +37,23 @@ public class ChatMessage extends Trigger {
     }
 
     @Override
-    public boolean checkTrigger(String message) {
-        String msg = this.colorCodes ? message : StringUtils.stripControlCodes(message);
-        int found = 0;
-        for (Map.Entry<String, Boolean> pattern : this.patterns.entrySet()) {
-            if (!pattern.getValue()) {
-                Matcher matcher = Pattern.compile(pattern.getKey()).matcher(msg);
-                Utils.sendModMessage(msg + " " + pattern.getKey());
-                if (matcher.find()) {
-                    this.patterns.put(pattern.getKey(), true);
-                    found++;
-                }
-            } else found++;
-        }
-        if (found >= amountNeeded) {
-            reset();
-            return true;
+    public boolean checkTrigger(Object object) {
+        if (object instanceof String) {
+            String msg = this.colorCodes ? (String) object : StringUtils.stripControlCodes((String) object);
+            int found = 0;
+            for (Map.Entry<String, Boolean> pattern : this.patterns.entrySet()) {
+                if (!pattern.getValue()) {
+                    Matcher matcher = Pattern.compile(pattern.getKey()).matcher(msg);
+                    if (matcher.find()) {
+                        this.patterns.put(pattern.getKey(), true);
+                        found++;
+                    }
+                } else found++;
+            }
+            if (found >= amountNeeded) {
+                reset();
+                return true;
+            }
         }
         return false;
     }

@@ -16,7 +16,7 @@ public class ClickPos extends Trigger {
     public Vector3f position;
     public int amount;
     public int timesClicked;
-    public String heldItemName;
+    public String heldItemName; //todo: add contains/exact
 
     public ClickPos(int mouseButton, Vector3f position, int amount, String heldItemName) {
         this.mouseButton = mouseButton;
@@ -26,30 +26,33 @@ public class ClickPos extends Trigger {
     }
 
     @Override
-    public boolean checkTrigger(Packet<?> clickPos) {
-        BlockPos pos = null;
-        int mb = -1;
-        if (clickPos instanceof C07PacketPlayerDigging) {
-            pos = ((C07PacketPlayerDigging) clickPos).getPosition();
-            mb = 1;
-        } else if (clickPos instanceof C08PacketPlayerBlockPlacement) {
-            pos = ((C08PacketPlayerBlockPlacement) clickPos).getPosition();
-            mb = 2;
-        }
-        if (pos != null && (mouseButton == -1 || mouseButton == mb)) {
-            if (pos.equals(new BlockPos(Utils.serializableToVec3(position)))) {
-                if (heldItemName.equals("any")) ;
-                else if (QuestMaster.mc.thePlayer.getHeldItem() == null) {
-                    return false;
-                } else {
-                    String name = SkyblockItemHandler.getSkyBlockItemID(QuestMaster.mc.thePlayer.getHeldItem());
-                    if (!heldItemName.equals(name)) return false;
-                }
+    public boolean checkTrigger(Object object) {
+        if (object instanceof Packet<?>) {
+            Packet<?> clickPos = (Packet<?>) object;
+            BlockPos pos = null;
+            int mb = -1;
+            if (clickPos instanceof C07PacketPlayerDigging) {
+                pos = ((C07PacketPlayerDigging) clickPos).getPosition();
+                mb = 1;
+            } else if (clickPos instanceof C08PacketPlayerBlockPlacement) {
+                pos = ((C08PacketPlayerBlockPlacement) clickPos).getPosition();
+                mb = 2;
+            }
+            if (pos != null && (mouseButton == -1 || mouseButton == mb)) {
+                if (pos.equals(new BlockPos(Utils.serializableToVec3(position)))) {
+                    if (heldItemName.equals("any"));
+                    else if (QuestMaster.mc.thePlayer.getHeldItem() == null) {
+                        return false;
+                    } else {
+                        String name = SkyblockItemHandler.getSkyBlockItemID(QuestMaster.mc.thePlayer.getHeldItem());
+                        if (!heldItemName.equals(name)) return false;
+                    }
 
-                timesClicked++;
-                if (amount == timesClicked) {
-                    timesClicked = 0;
-                    return true;
+                    timesClicked++;
+                    if (amount == timesClicked) {
+                        timesClicked = 0;
+                        return true;
+                    }
                 }
             }
         }

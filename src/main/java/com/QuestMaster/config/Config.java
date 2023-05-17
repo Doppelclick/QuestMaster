@@ -31,6 +31,12 @@ public class Config {
     public static boolean spaceQuests = false;
     public static double infoTextScale = 1.0;
     public static int infoTextOutline = 1;
+
+
+    public static boolean beam = true;
+    public static boolean block = true;
+    public static boolean text = true;
+
     public static String intToName(int integer) {
         if (integer == 2) return "full";
         else if (integer == 1) return "shadow";
@@ -237,6 +243,9 @@ public class Config {
 
     public static String understandMe(boolean c) {
         return (c ? "§2On" : "§4Off") + "§r";
+    }
+    public static String understandMeIcon(boolean c) {
+        return (c ? "§2✓" : "§4x") + "§r";
     }
 
     public static void cfgReload() {

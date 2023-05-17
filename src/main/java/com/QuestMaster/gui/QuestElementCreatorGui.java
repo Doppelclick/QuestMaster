@@ -11,7 +11,6 @@ import com.QuestMaster.classes.triggers.PlayerPosition;
 import com.QuestMaster.config.Config;
 import com.QuestMaster.utils.FileUtils;
 import com.QuestMaster.utils.Utils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
@@ -45,7 +44,7 @@ public class QuestElementCreatorGui extends GuiScreen {
     private static GuiButton trigger;
     private static GuiButton triggerType;
     private static List<Gui> triggerTypes = new ArrayList<>();
-    private static List<Gui> triggerSettings = new ArrayList<>();
+    private static final List<Gui> triggerSettings = new ArrayList<>();
     private static GuiButton manual;
     private static GuiButton chatMessage;
     private static GuiButton colorCodes;
@@ -54,11 +53,7 @@ public class QuestElementCreatorGui extends GuiScreen {
     private static List<Gui> chatMessages;
     private static GuiButton clickPos;
     private static GuiTextField heldItemName;
-    private static HashMap<String, Integer> stringToMB = new HashMap<String, Integer>()  {{
-       put("any", -1);
-       put("left", 0);
-       put("right", 1);
-    }};
+    private static final List<String> stringToMB = new ArrayList<>(Arrays.asList("any", "left", "right"));
     private static GuiTextField requiredMouseButton;
     private static GuiTextField positionx;
     private static GuiTextField positiony;
@@ -68,6 +63,8 @@ public class QuestElementCreatorGui extends GuiScreen {
     private static GuiButton playerCollect;
     private static GuiTextField collectedItemName;
     private static GuiTextField collectedAmount;
+    private GuiButton exact;
+    private static String exactText(boolean c) { return (c ? "§a" : "") + "Equals§r / " + (c ? "" : "§a") + "contains"; }
     private static List<Gui> playerCollectCat;
     private static GuiButton playerPosition;
     private static GuiTextField playerx;
@@ -82,8 +79,11 @@ public class QuestElementCreatorGui extends GuiScreen {
     private static GuiTextField y;
     private static GuiTextField z;
     private static List<Gui> waypointCat = new ArrayList<>();
+    private static GuiButton setLast;
     private static GuiButton enabled;
     private static List<Gui> elementSettings = new ArrayList<>();
+    private static HashMap<Gui, String> hovers = new HashMap<>();
+
 
     @Override
     public void initGui() {
@@ -111,7 +111,8 @@ public class QuestElementCreatorGui extends GuiScreen {
         elementName.setText(editing.name.isEmpty() ? "Set displayed objective" : editing.name);
         enabled = new GuiButton(1, 0, 0, 150, 20, "Element toggle: " + Config.understandMe(editing.enabled));
         waypoint = new GuiButton(1, 0, 0, 150, 20, "Edit waypoint position");
-        elementSettings = new ArrayList<>(Arrays.asList(elementName, trigger, waypoint, enabled));
+        setLast = new GuiButton(1, 0, 0, 80, 20, "Set last");
+        elementSettings = new ArrayList<>(Arrays.asList(elementName, trigger, waypoint, enabled, setLast));
         GuiManager.displaycategory(elementSettings, width / 2f, height / 6f);
         setAllState(elementSettings, true);
 
@@ -153,7 +154,8 @@ public class QuestElementCreatorGui extends GuiScreen {
 
         collectedItemName = new GuiTextField(0, this.fontRendererObj, 0, 0, 250, 20);
         collectedAmount = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
-        playerCollectCat = new ArrayList<>(Arrays.asList(collectedItemName, collectedAmount));
+        exact = new GuiButton(0, 0, 0, 150, 20,  exactText(true));
+        playerCollectCat = new ArrayList<>(Arrays.asList(collectedItemName, collectedAmount, exact));
         GuiManager.displaycategory(playerCollectCat, width / 2f, height / 6f + 90);
 
         playerx = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
@@ -165,12 +167,29 @@ public class QuestElementCreatorGui extends GuiScreen {
         GuiManager.displaycategory(playerPosCat, width / 2f, height / 6f + 90);
 
         loadTrigger();
+
+        hovers.put(trigger, "What triggers this element to be activated");
+        hovers.put(x, "x");
+        hovers.put(y, "y");
+        hovers.put(z, "z");
+        hovers.put(setLast, "If this element's trigger is activated the Quest will be completed and deactivated");
+        hovers.put(colorCodes, "You will need to use §");
+        hovers.put(newPattern, "Create a pattern that chat messages are matched with # -§lUses Java regex");
+        hovers.put(heldItemName, "Checks display String and Skyblock item id");
+        hovers.put(requiredMouseButton, "any / left / right");
+        hovers.put(positionx, "x");
+        hovers.put(positiony, "y");
+        hovers.put(positionz, "z");
+        hovers.put(collectedItemName, "Checks display String and Skyblock item id");
+        hovers.put(playerx, "x");
+        hovers.put(playery, "y");
+        hovers.put(playerz, "z");
+        hovers.put(duration, "How long you will have to remain within the given distance of the coords");
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
-        Minecraft mc = Minecraft.getMinecraft();
         super.drawScreen(mouseX, mouseY, partialTicks);
 
         elementName.drawTextBox();
@@ -206,6 +225,25 @@ public class QuestElementCreatorGui extends GuiScreen {
                 distance.drawTextBox();
             }
         }
+
+
+        for (Gui b : hovers.keySet()) {
+            if (b instanceof GuiButton) {
+                GuiButton button = (GuiButton) b;
+                if (button.isMouseOver()) {
+                    List<String> hovertext = Arrays.asList(hovers.get(button).split(" # "));
+                    drawHoveringText(hovertext, mouseX - 5, mouseY);
+                }
+            } else if (b instanceof GuiTextField) {
+                GuiTextField button = (GuiTextField) b;
+                if (button.isFocused()) {
+                    if ((mouseX >= button.xPosition && mouseX <= button.xPosition + button.width) && (mouseY >= button.yPosition && mouseY <= button.yPosition + button.height)) {
+                        List<String> hovertext = Arrays.asList(hovers.get(button).split(" # "));
+                        drawHoveringText(hovertext, mouseX - 5, mouseY);
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -215,10 +253,15 @@ public class QuestElementCreatorGui extends GuiScreen {
         boolean intsOnly = ((int) c > 47 && (int) c < 58) || (int) c == 8 || (int) c == 127;
         if (elementName.isFocused()) {
             elementName.textboxKeyTyped(c, kc);
-        } else if (intsOnly) {
+        } else if ((intsOnly || (int) c == 45 || (int) c == 46) && showWaypointCat) {
             for (Gui field : waypointCat) {
                 if (((GuiTextField) field).isFocused()) {
-                    ((GuiTextField) field).textboxKeyTyped(c, kc);
+                    if (((GuiTextField) field).getText().contains(".") && (int) c == 46) ((GuiTextField) field).setText(((GuiTextField) field).getText().replace(".", ""));
+                    if ((int) c == 45) {
+                        if (((GuiTextField) field).getText().contains("-")) ((GuiTextField) field).setText(((GuiTextField) field).getText().replace("-", ""));
+                        else ((GuiTextField) field).setText("-" + ((GuiTextField) field).getText());
+                    }
+                    else ((GuiTextField) field).textboxKeyTyped(c, kc);
                     return;
                 }
             }
@@ -241,22 +284,54 @@ public class QuestElementCreatorGui extends GuiScreen {
             } else if (this.buttonList.contains(clickPos)) {
                 if (heldItemName.isFocused()) heldItemName.textboxKeyTyped(c, kc);
                 if (requiredMouseButton.isFocused()) requiredMouseButton.textboxKeyTyped(c, kc);
-                if (intsOnly) {
-                    if (positionx.isFocused()) positionx.textboxKeyTyped(c, kc);
-                    if (positiony.isFocused()) positiony.textboxKeyTyped(c, kc);
-                    if (positionz.isFocused()) positionz.textboxKeyTyped(c, kc);
-                    if (amountOfClicks.isFocused()) amountOfClicks.textboxKeyTyped(c, kc);
+                if (intsOnly || (int) c == 45) {
+                    if (positionx.isFocused()) {
+                        if ((int) c == 45) {
+                            if (positionx.getText().contains("-")) positionx.setText(positionx.getText().replace("-", ""));
+                            else positionx.setText("-" + positionx.getText());
+                        } else positionx.textboxKeyTyped(c, kc);
+                    }
+                    else if (positiony.isFocused()) {
+                        if ((int) c == 45) {
+                            if (positiony.getText().contains("-")) positiony.setText(positiony.getText().replace("-", ""));
+                            else positiony.setText("-" + positiony.getText());
+                        } else positiony.textboxKeyTyped(c, kc);
+                    }
+                    else if (positionz.isFocused()) {
+                        if ((int) c == 45) {
+                            if (positionz.getText().contains("-")) positionz.setText(positionz.getText().replace("-", ""));
+                            else positionz.setText("-" + positionz.getText());
+                        } else positionz.textboxKeyTyped(c, kc);
+                    }
+                    else if (amountOfClicks.isFocused() && (int) c != 45) amountOfClicks.textboxKeyTyped(c, kc);
                 }
             } else if (this.buttonList.contains(playerCollect)) {
                 if (collectedItemName.isFocused()) collectedItemName.textboxKeyTyped(c, kc);
-                if (intsOnly && collectedAmount.isFocused()) collectedAmount.textboxKeyTyped(c, kc);
+                else if (intsOnly && collectedAmount.isFocused()) collectedAmount.textboxKeyTyped(c, kc);
             } else if (this.buttonList.contains(playerPosition)) {
-                if (intsOnly) {
-                    if (playerx.isFocused()) playerx.textboxKeyTyped(c, kc);
-                    if (playery.isFocused()) playery.textboxKeyTyped(c, kc);
-                    if (playerz.isFocused()) playerz.textboxKeyTyped(c, kc);
-                    if (duration.isFocused()) duration.textboxKeyTyped(c, kc);
-                    if (distance.isFocused()) distance.textboxKeyTyped(c, kc);
+                if (intsOnly || (int) c == 45 || (int) c == 46) {
+                    if (playerx.isFocused()) {
+                        if (playerx.getText().contains(".") && (int) c == 46) playerx.setText(playerx.getText().replace(".", ""));
+                        if ((int) c == 45) {
+                            if (playerx.getText().contains("-")) playerx.setText(playerx.getText().replace("-", ""));
+                            else playerx.setText("-" + playerx.getText());
+                        } else playerx.textboxKeyTyped(c, kc);
+                    } else if (playery.isFocused()) {
+                        if (playery.getText().contains(".") && (int) c == 46) playery.setText(playery.getText().replace(".", ""));
+                        if ((int) c == 45) {
+                            if (playery.getText().contains("-")) playery.setText(playery.getText().replace("-", ""));
+                            else playery.setText("-" + playery.getText());
+                        } else playery.textboxKeyTyped(c, kc);
+                    } else if (playerz.isFocused()) {
+                        if (playerz.getText().contains(".") && (int) c == 46) playerz.setText(playerz.getText().replace(".", ""));
+                        if ((int) c == 45) {
+                            if (playerz.getText().contains("-")) playerz.setText(playerz.getText().replace("-", ""));
+                            else playerz.setText("-" + playerz.getText());
+                        } else playerz.textboxKeyTyped(c, kc);
+                    } else if ((int) c != 45 && (int) c != 46) {
+                        if (duration.isFocused()) duration.textboxKeyTyped(c, kc);
+                        if (distance.isFocused()) distance.textboxKeyTyped(c, kc);
+                    }
                 }
             }
         }
@@ -272,9 +347,10 @@ public class QuestElementCreatorGui extends GuiScreen {
             if (!enWas && elementName.getText().equals("Set displayed objective")) elementName.setText("");
         } else if (enWas) {
             if (elementName.getText().isEmpty()) elementName.setText("Set displayed objective");
-        }
-        for (Gui field : waypointCat) {
-            ((GuiTextField)field).mouseClicked(mouseX, mouseY, mouseButton);
+        } else if (showWaypointCat) {
+            for (Gui field : waypointCat) {
+                ((GuiTextField) field).mouseClicked(mouseX, mouseY, mouseButton);
+            }
         }
 
         if (!this.buttonList.contains(manual)) {
@@ -284,7 +360,7 @@ public class QuestElementCreatorGui extends GuiScreen {
                 if (amountNeeded.isFocused()) {
                     if (!was) amountNeeded.setText(amountNeeded.getText().replace("Amount of messages needed: ", ""));
                 } else {
-                    if (was) {
+                    if (was &! amountNeeded.getText().contains("Amount of messages needed: " )) {
                         amountNeeded.setText("Amount of messages needed: " + amountNeeded.getText());
                     }
                 }
@@ -310,7 +386,7 @@ public class QuestElementCreatorGui extends GuiScreen {
                         heldItemName.setText(heldItemName.getText().replace("Held item name: ", ""));
                     }
                 } else {
-                    if (hWas) {
+                    if (hWas &! heldItemName.getText().contains("Held item name: ")) {
                         heldItemName.setText("Held item name: " + heldItemName.getText());
                     }
                 }
@@ -320,7 +396,7 @@ public class QuestElementCreatorGui extends GuiScreen {
                 if (requiredMouseButton.isFocused()) {
                     if (!mbWas) requiredMouseButton.setText(requiredMouseButton.getText().replace("MB: ", ""));
                 } else {
-                    if (mbWas) requiredMouseButton.setText("MB: " + requiredMouseButton.getText());
+                    if (mbWas &! requiredMouseButton.getText().contains("MB: ")) requiredMouseButton.setText("MB: " + requiredMouseButton.getText());
                 }
 
                 positionx.mouseClicked(mouseX, mouseY, mouseButton);
@@ -334,7 +410,7 @@ public class QuestElementCreatorGui extends GuiScreen {
                         amountOfClicks.setText(amountOfClicks.getText().replace("Required amount of clicks: ", ""));
                     }
                 } else {
-                    if (amountWas) {
+                    if (amountWas &! amountOfClicks.getText().contains("Required amount of clicks: ")) {
                         amountOfClicks.setText("Required amount of clicks: " + amountOfClicks.getText());
                     }
                 }
@@ -346,7 +422,7 @@ public class QuestElementCreatorGui extends GuiScreen {
                         collectedItemName.setText(collectedItemName.getText().replace("Item: ", ""));
                     }
                 } else {
-                    if (itemWas) {
+                    if (itemWas &! collectedItemName.getText().contains("Item: ")) {
                         collectedItemName.setText("Item: " + collectedItemName.getText());
                     }
                 }
@@ -358,7 +434,7 @@ public class QuestElementCreatorGui extends GuiScreen {
                         collectedAmount.setText(collectedAmount.getText().replace("Amount: ", ""));
                     }
                 } else {
-                    if (amountWas) {
+                    if (amountWas &! collectedAmount.getText().contains("Amount: ")) {
                         collectedAmount.setText("Amount: " + collectedAmount.getText());
                     }
                 }
@@ -374,7 +450,7 @@ public class QuestElementCreatorGui extends GuiScreen {
                         duration.setText(duration.getText().replace("Dwell millis: ", ""));
                     }
                 } else {
-                    if (durationWas) {
+                    if (durationWas &! duration.getText().contains("Dwell millis: ")) {
                         duration.setText("Dwell millis: " + duration.getText());
                     }
                 }
@@ -386,7 +462,7 @@ public class QuestElementCreatorGui extends GuiScreen {
                         distance.setText(distance.getText().replace("Distance: ", ""));
                     }
                 } else {
-                    if (distanceWas) {
+                    if (distanceWas &! distance.getText().contains("Distance: ")) {
                         distance.setText("Distance: " + distance.getText());
                     }
                 }
@@ -428,6 +504,8 @@ public class QuestElementCreatorGui extends GuiScreen {
         } else if (button == enabled) {
             editing.enabled =! editing.enabled;
             enabled.displayString = "Element toggle: " + Config.understandMe(editing.enabled);
+        } else if (button == setLast) {
+            elementName.setText("END_OF_QUEST");
         } else if (button == waypoint) {
             hideAllCategories();
             showWaypointCat =! showWaypointCat;
@@ -466,6 +544,9 @@ public class QuestElementCreatorGui extends GuiScreen {
             GuiTextField field = new GuiTextField(0, this.fontRendererObj, 0, 0, 250, 20);
             chatMessages.add(chatMessages.size() - 1, field);
             GuiManager.displaycategory(chatMessages, width / 2f, height / 6f + 90);
+        } else if (button == exact) {
+            ((PlayerCollect) editing.progressTrigger).exact =! ((PlayerCollect) editing.progressTrigger).exact;
+            exact.displayString = exactText(((PlayerCollect) editing.progressTrigger).exact);
         }
         else if (this.buttonList.contains(chatMessage) && this.buttonList.contains(clickPos)) {
             boolean clicked = true;
@@ -476,7 +557,7 @@ public class QuestElementCreatorGui extends GuiScreen {
             } else if (button == clickPos) {
                 if (!(editing.progressTrigger instanceof ClickPos)) editing.progressTrigger = new ClickPos(-1, new Vector3f(69420, 69420, 69420), 1, "any");
             } else if (button == playerCollect) {
-                if (!(editing.progressTrigger instanceof PlayerCollect)) editing.progressTrigger = new PlayerCollect("undefined", 1);
+                if (!(editing.progressTrigger instanceof PlayerCollect)) editing.progressTrigger = new PlayerCollect("undefined", 1, true);
             } else if (button == playerPosition) {
                 if (!(editing.progressTrigger instanceof PlayerPosition)) editing.progressTrigger = new PlayerPosition(new Vector3f(69420, 69420, 69420), 1, 1000);
             } else clicked = false;
@@ -519,7 +600,7 @@ public class QuestElementCreatorGui extends GuiScreen {
             } else if (editing.progressTrigger instanceof ClickPos) {
                 triggerSettings.add(clickPos);
 
-                requiredMouseButton.setText("MB: " + stringToMB.keySet().toArray()[((ClickPos) editing.progressTrigger).mouseButton + 1]);
+                requiredMouseButton.setText("MB: " + stringToMB.get(((ClickPos) editing.progressTrigger).mouseButton + 1));
                 positionx.setText(String.valueOf(((ClickPos) editing.progressTrigger).position.x));
                 positiony.setText(String.valueOf(((ClickPos) editing.progressTrigger).position.y));
                 positionz.setText(String.valueOf(((ClickPos) editing.progressTrigger).position.z));
@@ -532,6 +613,7 @@ public class QuestElementCreatorGui extends GuiScreen {
 
                 collectedItemName.setText("Item: " + ((PlayerCollect) editing.progressTrigger).itemName);
                 collectedAmount.setText("Amount: " + ((PlayerCollect) editing.progressTrigger).amount);
+                exact.displayString = exactText(((PlayerCollect) editing.progressTrigger).exact);
 
                 setAllState(playerCollectCat, true);
             } else if (editing.progressTrigger instanceof PlayerPosition) {
@@ -567,7 +649,7 @@ public class QuestElementCreatorGui extends GuiScreen {
     public static void clear() {
         category = "";
         quest = -1;
-        editing = new QuestElement("", null, new Vector3f(69420, 69420, 69420));;
+        editing = new QuestElement("", null, new Vector3f(69420, 69420, 69420));
         oldName = "";
         deleting = false;
         elementIndex = -1;
@@ -629,11 +711,12 @@ public class QuestElementCreatorGui extends GuiScreen {
                     e.printStackTrace();
                 }
             } else if (editing.progressTrigger instanceof ClickPos) {
-                ((ClickPos) editing.progressTrigger).mouseButton = stringToMB.getOrDefault(requiredMouseButton.getText().replace("MB: ", ""), -1);
+                int mb = stringToMB.indexOf(requiredMouseButton.getText().replace("MB: ", ""));
+                ((ClickPos) editing.progressTrigger).mouseButton = mb == -1 ? mb : mb - 1;
                 try {
-                    int x = Integer.parseInt(positionx.getText());
-                    int y = Integer.parseInt(positiony.getText());
-                    int z = Integer.parseInt(positionz.getText());
+                    float x = Float.parseFloat(positionx.getText());
+                    float y = Float.parseFloat(positiony.getText());
+                    float z = Float.parseFloat(positionz.getText());
                     ((ClickPos) editing.progressTrigger).position = new Vector3f(x, y, z);
                     String string = amountOfClicks.getText().replace("Required amount of clicks: ", "");
                     ((ClickPos) editing.progressTrigger).amount = string.isEmpty() ? 1 : Integer.parseInt(string);
@@ -653,9 +736,9 @@ public class QuestElementCreatorGui extends GuiScreen {
                 }
             } else if (editing.progressTrigger instanceof PlayerPosition) {
                 try {
-                    int x = Integer.parseInt(playerx.getText());
-                    int y = Integer.parseInt(playery.getText());
-                    int z = Integer.parseInt(playerz.getText());
+                    float x = Float.parseFloat(playerx.getText());
+                    float y = Float.parseFloat(playery.getText());
+                    float z = Float.parseFloat(playerz.getText());
                     ((PlayerPosition) editing.progressTrigger).position = new Vector3f(x, y, z);
                     String dur = duration.getText().replace("Dwell millis: ", "");
                     ((PlayerPosition) editing.progressTrigger).durationMillis = dur.isEmpty() ? 1000 : Integer.parseInt(dur);

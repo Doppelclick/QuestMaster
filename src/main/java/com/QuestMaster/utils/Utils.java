@@ -81,7 +81,7 @@ public class Utils {
         sendModMessage(new ChatComponentText(QuestMaster.chatTitle + msg));
     }
     public static void sendModMessage(IChatComponent msg) {
-        QuestMaster.mc.thePlayer.addChatMessage(msg);
+        if (QuestMaster.mc.thePlayer != null) QuestMaster.mc.thePlayer.addChatMessage(msg);
     }
 
     public static void showClientTitle(String title, String subtitle) {
@@ -202,9 +202,9 @@ public class Utils {
     }
 
     public static double maxDistance(Vector3f pos, Vector3f target) {
-        double x = Math.abs(Math.abs(target.x) - Math.abs(pos.x));
-        double y = Math.abs(Math.abs(target.y) - Math.abs(pos.y));
-        double z = Math.abs(Math.abs(target.z) - Math.abs(pos.z));
+        double x = Math.abs(target.x - pos.x);
+        double y = Math.abs(target.y - pos.y);
+        double z = Math.abs(target.z - pos.z);
         return Math.max(x, Math.max(y, z));
     }
 }
