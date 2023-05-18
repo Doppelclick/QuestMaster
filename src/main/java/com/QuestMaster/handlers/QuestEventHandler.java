@@ -1,6 +1,7 @@
 package com.QuestMaster.handlers;
 
 import com.QuestMaster.QuestMaster;
+import com.QuestMaster.classes.Island;
 import com.QuestMaster.classes.Quest;
 import com.QuestMaster.classes.QuestElement;
 import com.QuestMaster.config.Config;
@@ -27,19 +28,19 @@ public class QuestEventHandler {
 
     @SubscribeEvent
     void playerUpdate(LivingEvent.LivingUpdateEvent event) {
-        if (!event.entity.equals(QuestMaster.mc.thePlayer)) return;
+        if (!event.entity.equals(QuestMaster.mc.thePlayer) || notMet()) return;
         questCheckForLoop(Utils.vec3ToSerializable(event.entity.getPositionVector()));
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     void chatMessageReceived(ClientChatReceivedEvent event) {
-        if (event.type != 0) return;
+        if (event.type != 0 || notMet()) return;
         questCheckForLoop(event.message.getUnformattedText());
     }
 
     @SubscribeEvent(receiveCanceled = true)
     void receivePacket(PacketEvent.ReceiveEvent event) {
-        if (QuestMaster.mc.thePlayer == null) return;
+        if (QuestMaster.mc.thePlayer == null || notMet()) return;
         if (QuestMaster.mc.thePlayer.ticksExisted <= 1) return;
         if (event.packet instanceof S2FPacketSetSlot) {
             if (((S2FPacketSetSlot) event.packet).func_149175_c() != 0) return;
@@ -51,7 +52,7 @@ public class QuestEventHandler {
 
     @SubscribeEvent
     void sendPacket(PacketEvent.SendEvent event) {
-        if (QuestMaster.mc.thePlayer == null) return;
+        if (QuestMaster.mc.thePlayer == null || notMet()) return;
         if (event.packet instanceof C07PacketPlayerDigging || event.packet instanceof C08PacketPlayerBlockPlacement) {
             questCheckForLoop(event.packet);
         }
@@ -67,9 +68,10 @@ public class QuestEventHandler {
 
     @SubscribeEvent
     void worldRender(RenderWorldLastEvent event) {
+        if (QuestMaster.mc.thePlayer == null || notMet()) return;
         for (Map.Entry<String, List<Quest>> entry : QuestMaster.quests.entrySet()) {
             for (Quest quest : entry.getValue()) {
-                if (quest.enabled) {
+                if (quest.enabled && ((quest.locations.contains(QuestMaster.island) &! QuestMaster.island.equals(Island.NONE)) || quest.locations.isEmpty())) {
                     for (QuestElement element : quest) {
                         if (element.enabled && element.waypoint != null &! element.name.equals("END_OF_QUEST")) {
                             String text = element.name;

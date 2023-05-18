@@ -253,6 +253,10 @@ public class Config {
 
         if (!hasKey("general", "modToggle")) writeBooleanConfig("general", "modToggle", modToggle);
 
+        if (!hasKey("general", "autoEnableQuests")) writeBooleanConfig("general", "modToggle", autoEnableQuests);
+        if (!hasKey("general", "disableLast")) writeBooleanConfig("general", "disableLast", disableLast);
+
+
         if (!hasKey("info", "toggle")) writeBooleanConfig("info", "toggle", infoToggle);
         if (!hasKey("info", "posX")) writeIntConfig("info", "posX", infoPos.x);
         if (!hasKey("info", "posY")) writeIntConfig("info", "posY", infoPos.y);
@@ -267,6 +271,9 @@ public class Config {
         if (!hasKey("info", "textOutline")) writeIntConfig("info", "textOutline", infoTextOutline);
 
         modToggle = getBoolean("general", "modToggle");
+
+        autoEnableQuests = getBoolean("general", "autoEnableQuests");
+        disableLast = getBoolean("general", "disableLast");
 
         infoToggle = getBoolean("info", "toggle");
         infoPos = new Point(getInt("info", "posX"), getInt("info", "posY"));

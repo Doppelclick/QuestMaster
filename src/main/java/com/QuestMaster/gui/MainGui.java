@@ -53,6 +53,7 @@ public class MainGui extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
         Minecraft mc = Minecraft.getMinecraft();
+        super.drawScreen(mouseX, mouseY, partialTicks);
 
         String text1 = "§l§bQuestMaster";
         int text1Width = mc.fontRendererObj.getStringWidth(StringUtils.stripControlCodes(text1));
@@ -61,8 +62,6 @@ public class MainGui extends GuiScreen {
         String text2 = "Categories: ";
         int text2Width = mc.fontRendererObj.getStringWidth(text2);
         RenderUtils.drawText(mc, text2, (width - text2Width) / 2f, height / 6f + 35, 1, 0);
-
-        super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
 
@@ -89,8 +88,10 @@ public class MainGui extends GuiScreen {
         else if (button == infoEditor) new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new InfoEditorGui()))).start();
         else if (categories.contains(button)) {
             String name = button.displayString;
-            if (button == newCat) new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new CategoryGui()))).start();
-            else if (QuestMaster.quests.containsKey(name)) {
+            if (button == newCat) {
+                CategoryGui.loadCategory("");
+                new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new CategoryGui()))).start();
+            } else if (QuestMaster.quests.containsKey(name)) {
                 CategoryGui.loadCategory(name);
                 new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new CategoryGui()))).start();
             }

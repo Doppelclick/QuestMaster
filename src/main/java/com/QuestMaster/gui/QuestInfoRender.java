@@ -1,6 +1,7 @@
 package com.QuestMaster.gui;
 
 import com.QuestMaster.QuestMaster;
+import com.QuestMaster.classes.Island;
 import com.QuestMaster.classes.Quest;
 import com.QuestMaster.classes.QuestElement;
 import com.QuestMaster.config.Config;
@@ -16,7 +17,7 @@ import java.util.Map;
 public class QuestInfoRender {
     @SubscribeEvent
     void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.type != RenderGameOverlayEvent.ElementType.ALL |! Config.modToggle |! Config.infoToggle || QuestMaster.mc.thePlayer == null) return;  //|! QuestMaster.inSkyblock
+        if (event.type != RenderGameOverlayEvent.ElementType.ALL |! Config.modToggle || (!QuestMaster.inSkyblock &! InfoEditorGui.guiOpened) |! Config.infoToggle || QuestMaster.mc.thePlayer == null) return;
         renderInfo();
     }
 
@@ -24,10 +25,12 @@ public class QuestInfoRender {
         List<String> strings = calculateStrings();
         if (strings.isEmpty() &! InfoEditorGui.guiOpened) return;
         float textOffset = (float) (2f * Config.infoTextScale);
+        float x = Config.infoPos.x;
+        float y = Config.infoPos.y;
         float height = (float) Math.max(Config.infoWidth.y, strings.size() * RenderUtils.lineHeight * Config.infoTextScale + textOffset);
-        RenderUtils.renderRect(Config.infoPos.x, Config.infoPos.y, Config.infoWidth.x, height, Config.infoColor);
-        if (Config.infoBorder) RenderUtils.renderRectBorder(Config.infoPos.x, Config.infoPos.y, Config.infoWidth.x, height, Config.infoBorderThickness, Config.infoBorderColor);
-        RenderUtils.renderTextList(QuestMaster.mc, strings, Config.infoPos.x + textOffset, Config.infoPos.y + textOffset, Config.infoTextScale, Config.infoTextOutline);
+        RenderUtils.renderRect(x, y, Config.infoWidth.x, height, Config.infoColor);
+        if (Config.infoBorder) RenderUtils.renderRectBorder(x, y, Config.infoWidth.x, height, Config.infoBorderThickness, Config.infoBorderColor);
+        RenderUtils.renderTextList(QuestMaster.mc, strings, x + textOffset, y + textOffset, Config.infoTextScale, Config.infoTextOutline);
     }
 
     public static List<String> calculateStrings() {
@@ -36,7 +39,7 @@ public class QuestInfoRender {
         for (Map.Entry<String, List<Quest>> category : QuestMaster.quests.entrySet()) {
             boolean addedCat = false;
             for (Quest quest : category.getValue()) {
-                if (quest.enabled &! quest.isEmpty()) {
+                if (quest.enabled &! quest.isEmpty() && ((quest.locations.contains(QuestMaster.island) &! QuestMaster.island.equals(Island.NONE)) || quest.locations.isEmpty())) {
                     boolean addedQuest = false;
                     for (int i = 0; i < quest.size(); i++) {
                         QuestElement questElement = quest.get(i);

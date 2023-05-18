@@ -17,12 +17,14 @@ public class ClickPos extends Trigger {
     public int amount;
     public int timesClicked;
     public String heldItemName; //todo: add contains/exact
+    public boolean exact;
 
-    public ClickPos(int mouseButton, Vector3f position, int amount, String heldItemName) {
+    public ClickPos(int mouseButton, Vector3f position, int amount, String heldItemName, boolean exact) {
         this.mouseButton = mouseButton;
         this.position = position;
         this.amount = amount;
         this.heldItemName = heldItemName;
+        this.exact = exact;
     }
 
     @Override
@@ -33,10 +35,10 @@ public class ClickPos extends Trigger {
             int mb = -1;
             if (clickPos instanceof C07PacketPlayerDigging) {
                 pos = ((C07PacketPlayerDigging) clickPos).getPosition();
-                mb = 1;
+                mb = 0;
             } else if (clickPos instanceof C08PacketPlayerBlockPlacement) {
                 pos = ((C08PacketPlayerBlockPlacement) clickPos).getPosition();
-                mb = 2;
+                mb = 1;
             }
             if (pos != null && (mouseButton == -1 || mouseButton == mb)) {
                 if (pos.equals(new BlockPos(Utils.serializableToVec3(position)))) {
@@ -45,7 +47,7 @@ public class ClickPos extends Trigger {
                         return false;
                     } else {
                         String name = SkyblockItemHandler.getSkyBlockItemID(QuestMaster.mc.thePlayer.getHeldItem());
-                        if (!heldItemName.equals(name)) return false;
+                        if (!compare(name) &! compare(QuestMaster.mc.thePlayer.getHeldItem().getDisplayName())) return false;
                     }
 
                     timesClicked++;
@@ -57,5 +59,9 @@ public class ClickPos extends Trigger {
             }
         }
         return false;
+    }
+
+    private boolean compare(String item) {
+        return this.exact ? item.equals(this.heldItemName) : item.contains(this.heldItemName);
     }
 }

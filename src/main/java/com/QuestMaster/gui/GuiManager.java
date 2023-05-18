@@ -23,10 +23,7 @@ public class GuiManager {
             int in = buttons.indexOf(br);
             float bw = 0;
             if (br instanceof GuiButton) bw = ((GuiButton) br).getButtonWidth();
-            else if (br instanceof GuiTextField) {
-                bw = (((GuiTextField) br).getWidth());
-                space += 10;
-            }
+            else if (br instanceof GuiTextField) bw = (((GuiTextField) br).getWidth());
             space += bw + 5;
             if (single || (in + 1 == buttons.size() &! (space - 5 > buttonspace))) {
                 buttonplacing.put(in, space - 5);

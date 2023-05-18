@@ -16,9 +16,11 @@ import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.fml.client.FMLClientHandler;
+import org.lwjgl.input.Keyboard;
 
 import javax.vecmath.Vector3f;
 import java.io.IOException;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,6 +55,7 @@ public class QuestElementCreatorGui extends GuiScreen {
     private static List<Gui> chatMessages;
     private static GuiButton clickPos;
     private static GuiTextField heldItemName;
+    private GuiButton exactHeld;
     private static final List<String> stringToMB = new ArrayList<>(Arrays.asList("any", "left", "right"));
     private static GuiTextField requiredMouseButton;
     private static GuiTextField positionx;
@@ -63,7 +66,7 @@ public class QuestElementCreatorGui extends GuiScreen {
     private static GuiButton playerCollect;
     private static GuiTextField collectedItemName;
     private static GuiTextField collectedAmount;
-    private GuiButton exact;
+    private GuiButton exactCollected;
     private static String exactText(boolean c) { return (c ? "§a" : "") + "Equals§r / " + (c ? "" : "§a") + "contains"; }
     private static List<Gui> playerCollectCat;
     private static GuiButton playerPosition;
@@ -108,6 +111,7 @@ public class QuestElementCreatorGui extends GuiScreen {
 
         trigger = new GuiButton(1, 0, 0, 150, 20, "Edit trigger");
         elementName = new GuiTextField(7, this.fontRendererObj, 0, 0, 250, 20);
+        elementName.setMaxStringLength(100);
         elementName.setText(editing.name.isEmpty() ? "Set displayed objective" : editing.name);
         enabled = new GuiButton(1, 0, 0, 150, 20, "Element toggle: " + Config.understandMe(editing.enabled));
         waypoint = new GuiButton(1, 0, 0, 150, 20, "Edit waypoint position");
@@ -144,18 +148,21 @@ public class QuestElementCreatorGui extends GuiScreen {
         GuiManager.displaycategory(chatMessages, width / 2f, height / 6f + 90);
 
         heldItemName = new GuiTextField(0, this.fontRendererObj, 0, 0, 250, 20);
+        heldItemName.setMaxStringLength(150);
+        exactHeld = new GuiButton(0, 0, 0, 150, 20,  exactText(true));
         requiredMouseButton = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
         positionx = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
         positiony = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
         positionz = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
         amountOfClicks = new GuiTextField(0, this.fontRendererObj, 0, 0, 180, 20);
-        clickPosCat = new ArrayList<>(Arrays.asList(heldItemName, requiredMouseButton, positionx, positiony, positionz, amountOfClicks));
+        clickPosCat = new ArrayList<>(Arrays.asList(heldItemName, exactHeld, requiredMouseButton, positionx, positiony, positionz, amountOfClicks));
         GuiManager.displaycategory(clickPosCat, width / 2f, height / 6f + 90);
 
         collectedItemName = new GuiTextField(0, this.fontRendererObj, 0, 0, 250, 20);
+        collectedItemName.setMaxStringLength(150);
         collectedAmount = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
-        exact = new GuiButton(0, 0, 0, 150, 20,  exactText(true));
-        playerCollectCat = new ArrayList<>(Arrays.asList(collectedItemName, collectedAmount, exact));
+        exactCollected = new GuiButton(0, 0, 0, 150, 20,  exactText(true));
+        playerCollectCat = new ArrayList<>(Arrays.asList(collectedItemName, collectedAmount, exactCollected));
         GuiManager.displaycategory(playerCollectCat, width / 2f, height / 6f + 90);
 
         playerx = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
@@ -250,7 +257,7 @@ public class QuestElementCreatorGui extends GuiScreen {
     protected void keyTyped(char c, int kc) throws IOException {
         super.keyTyped(c, kc);
 
-        boolean intsOnly = ((int) c > 47 && (int) c < 58) || (int) c == 8 || (int) c == 127;
+        boolean intsOnly = ((int) c > 47 && (int) c < 58) || (int) c == 8 || (int) c == 127 || kc == Keyboard.KEY_LEFT || kc == Keyboard.KEY_RIGHT || (kc == Keyboard.KEY_A && Keyboard.isKeyDown(Keyboard.KEY_LCONTROL));
         if (elementName.isFocused()) {
             elementName.textboxKeyTyped(c, kc);
         } else if ((intsOnly || (int) c == 45 || (int) c == 46) && showWaypointCat) {
@@ -542,11 +549,15 @@ public class QuestElementCreatorGui extends GuiScreen {
             colorCodes.displayString = "Match color codes: " + Config.understandMe(((ChatMessage) editing.progressTrigger).colorCodes);
         } else if (button == newPattern) {
             GuiTextField field = new GuiTextField(0, this.fontRendererObj, 0, 0, 250, 20);
+            field.setMaxStringLength(250);
             chatMessages.add(chatMessages.size() - 1, field);
             GuiManager.displaycategory(chatMessages, width / 2f, height / 6f + 90);
-        } else if (button == exact) {
+        } else if (button == exactCollected) {
             ((PlayerCollect) editing.progressTrigger).exact =! ((PlayerCollect) editing.progressTrigger).exact;
-            exact.displayString = exactText(((PlayerCollect) editing.progressTrigger).exact);
+            exactCollected.displayString = exactText(((PlayerCollect) editing.progressTrigger).exact);
+        } else if (button == exactHeld) {
+            ((ClickPos) editing.progressTrigger).exact =! ((ClickPos) editing.progressTrigger).exact;
+            exactHeld.displayString = exactText(((ClickPos) editing.progressTrigger).exact);
         }
         else if (this.buttonList.contains(chatMessage) && this.buttonList.contains(clickPos)) {
             boolean clicked = true;
@@ -555,7 +566,7 @@ public class QuestElementCreatorGui extends GuiScreen {
             } else if (button == chatMessage) {
                 if (!(editing.progressTrigger instanceof ChatMessage)) editing.progressTrigger = new ChatMessage(new ArrayList<>(), 1, true);
             } else if (button == clickPos) {
-                if (!(editing.progressTrigger instanceof ClickPos)) editing.progressTrigger = new ClickPos(-1, new Vector3f(69420, 69420, 69420), 1, "any");
+                if (!(editing.progressTrigger instanceof ClickPos)) editing.progressTrigger = new ClickPos(-1, new Vector3f(69420, 69420, 69420), 1, "any", true);
             } else if (button == playerCollect) {
                 if (!(editing.progressTrigger instanceof PlayerCollect)) editing.progressTrigger = new PlayerCollect("undefined", 1, true);
             } else if (button == playerPosition) {
@@ -592,6 +603,7 @@ public class QuestElementCreatorGui extends GuiScreen {
                 chatMessages = new ArrayList<>(Arrays.asList(colorCodes, amountNeeded, newPattern));
                 for (String pattern : ((ChatMessage) editing.progressTrigger).patterns.keySet()) {
                     GuiTextField field = new GuiTextField(0, this.fontRendererObj, 0, 0, 250, 20);
+                    field.setMaxStringLength(250);
                     field.setText(pattern);
                     chatMessages.add(chatMessages.size() - 1, field);
                 }
@@ -606,6 +618,7 @@ public class QuestElementCreatorGui extends GuiScreen {
                 positionz.setText(String.valueOf(((ClickPos) editing.progressTrigger).position.z));
                 amountOfClicks.setText("Required amount of clicks: " + ((ClickPos) editing.progressTrigger).amount);
                 heldItemName.setText("Held item name: " + ((ClickPos) editing.progressTrigger).heldItemName);
+                exactHeld.displayString = exactText(((ClickPos) editing.progressTrigger).exact);
 
                 setAllState(clickPosCat, true);
             } else if (editing.progressTrigger instanceof PlayerCollect) {
@@ -613,7 +626,7 @@ public class QuestElementCreatorGui extends GuiScreen {
 
                 collectedItemName.setText("Item: " + ((PlayerCollect) editing.progressTrigger).itemName);
                 collectedAmount.setText("Amount: " + ((PlayerCollect) editing.progressTrigger).amount);
-                exact.displayString = exactText(((PlayerCollect) editing.progressTrigger).exact);
+                exactCollected.displayString = exactText(((PlayerCollect) editing.progressTrigger).exact);
 
                 setAllState(playerCollectCat, true);
             } else if (editing.progressTrigger instanceof PlayerPosition) {

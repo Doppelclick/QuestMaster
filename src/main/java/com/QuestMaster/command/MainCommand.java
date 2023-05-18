@@ -1,6 +1,9 @@
 package com.QuestMaster.command;
 
 import com.QuestMaster.QuestMaster;
+import com.QuestMaster.classes.Island;
+import com.QuestMaster.classes.Quest;
+import com.QuestMaster.classes.QuestElement;
 import com.QuestMaster.config.Config;
 import com.QuestMaster.gui.*;
 import com.QuestMaster.utils.FileUtils;
@@ -11,14 +14,17 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class MainCommand extends CommandBase {
     static String help() {
         return "§bQuestMaster§r (/questmaster, /qm)\n"
                 + " - help §7| This message§r\n"
                 + " - toggle §7| Toggle the mod§r (" + Config.understandMe(Config.modToggle) + ")\n"
+                + " - next [first quest / quest name] §7| Skip to the next element of a quest§r\n"
                 + " - main §7| Main gui and quests§r\n"
                 + " - config §7| General config gui§r\n"
                 + " - info §7| Edit the info display position and config§r\n"
@@ -48,7 +54,17 @@ public class MainCommand extends CommandBase {
     @Override
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] strings, BlockPos pos) {
         if (strings.length == 1) {
-            return getListOfStringsMatchingLastWord(strings, "help", "toggle", "main", "config", "info", "reload");
+            return getListOfStringsMatchingLastWord(strings, "help", "toggle", "next", "main", "config", "info", "reload");
+        } else if (strings.length == 2) {
+            List<String> quests = new ArrayList<>();
+            for (Map.Entry<String, List<Quest>> category : QuestMaster.quests.entrySet()) {
+                for (Quest quest : category.getValue()) {
+                    if (quest.enabled &! quest.isEmpty() && ((quest.locations.contains(QuestMaster.island) &! QuestMaster.island.equals(Island.NONE)) || quest.locations.isEmpty())) {
+                        quests.add(quest.name);
+                    }
+                }
+            }
+            if (!quests.isEmpty()) return getListOfStringsMatchingLastWord(strings, quests);
         }
         return null;
     }
@@ -56,13 +72,36 @@ public class MainCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender iCommandSender, String[] strings) throws CommandException {
         if (strings.length < 1) {
-            new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new MainGui()))).start();
+            GuiManager.openLastGui();
         } else {
             switch (strings[0].toLowerCase()) {
                 case "toggle":
                     Config.modToggle =! Config.modToggle;
                     Utils.sendModMessage("Toggled mod " + Config.understandMe(Config.modToggle));
                     Config.writeBooleanConfig("general", "modToggle", Config.modToggle);
+                    break;
+
+                case "next":
+                    StringBuilder questName = new StringBuilder();
+                    if (strings.length >= 2) {
+                        for (int i = 1; i < strings.length; i++) {
+                            questName.append(strings[i]);
+                        }
+                    }
+                    for (Map.Entry<String, List<Quest>> category : QuestMaster.quests.entrySet()) {
+                        for (Quest quest : category.getValue()) {
+                            if (quest.enabled &! quest.isEmpty() && ((quest.locations.contains(QuestMaster.island) &! QuestMaster.island.equals(Island.NONE)) || quest.locations.isEmpty()) &&
+                                    (questName.toString().isEmpty() || quest.name.contentEquals(questName))) {
+                                for (QuestElement element : quest) {
+                                    if (element.enabled) {
+                                        int index = quest.indexOf(element);
+                                        if (Config.disableLast) element.enabled = false;
+                                        quest.get(index + 1).enabled = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
                     break;
 
                 case "main":
