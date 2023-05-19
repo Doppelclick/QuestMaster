@@ -3,7 +3,7 @@
   <a href="https://github.com/Doppelclick/QuestMaster/releases/latest" target="_blank">
     <img alt="version" src="https://img.shields.io/github/release/Doppelclick/QuestMaster?color=blue&style=for-the-badge" />
   </a>
-  <a href="https://github.com/doppelclick/diana" target="_blank">
+  <a href="https://github.com/doppelclick/QuestMaster" target="_blank">
     <img alt="version" src="https://img.shields.io/static/v1?label=on&message=Github&color=black&style=for-the-badge"/>
   </a>
   <a href="https://discord.com/channels/@me" target="_blank">
