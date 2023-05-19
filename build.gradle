@@ -13,7 +13,7 @@ buildscript {
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = "0.1.0"
+version = "0.9"
 group = "com.QuestMaster"
 archivesBaseName = "QuestMaster"
 

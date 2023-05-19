@@ -37,7 +37,7 @@ import java.util.*;
 @Mod(modid = QuestMaster.Name, version = QuestMaster.V)
 public class QuestMaster {
     public static final String Name = "QuestMaster";
-    public static final String V = "0.1.0";
+    public static final String V = "0.9";
     public static String chatTitle = "§b[QuestMaster]§r ";
     public static final Logger logger = LogManager.getLogger(Name);
     public static final Minecraft mc = Minecraft.getMinecraft();

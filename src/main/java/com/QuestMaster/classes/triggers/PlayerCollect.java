@@ -9,6 +9,7 @@ public class PlayerCollect extends Trigger {
     public String itemName;
     public int amount;
     public boolean exact;
+    private int inInv = 0;
 
     public PlayerCollect(String itemName, int amount, boolean exact) {
         this.itemName = itemName;
@@ -25,19 +26,9 @@ public class PlayerCollect extends Trigger {
                 found = compare(SkyblockItemHandler.actualItemID((ItemStack) object));
             }
             if (found) {
-                if (amount > 1) {
-                    int inInv = 0;
-                    for (ItemStack i : QuestMaster.mc.thePlayer.getInventory()) {
-                        boolean f = compare(i.getDisplayName());
-                        if (!f) {
-                            f = compare(SkyblockItemHandler.actualItemID(i));
-                        }
-                        if (f) {
-                            inInv += i.stackSize;
-                        }
-                    }
-                    return inInv >= amount;
-                } else {
+                inInv += ((ItemStack) object).stackSize;
+                if (inInv >= amount) {
+                    this.inInv = 0;
                     return true;
                 }
             }
