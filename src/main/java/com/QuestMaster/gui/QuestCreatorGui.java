@@ -225,7 +225,10 @@ public class QuestCreatorGui extends GuiScreen {
                     int ind = questElements.indexOf(button) / 2;
                     QuestElement element = quest.get(ind);
                     QuestElementCreatorGui.loadElement(element, ind);
-                } else QuestElementCreatorGui.clear();
+                } else  {
+                    QuestElementCreatorGui.clear();
+                    QuestElementCreatorGui.elementIndex = quest.size();
+                }
                 int index = -1;
                 String category = categoryOwner.getText();
                 if (!category.isEmpty()) {
@@ -360,7 +363,7 @@ public class QuestCreatorGui extends GuiScreen {
     }
 
 
-    public static boolean saveElement(String name, int index) {
+    public static boolean saveElement(String name) {
         if (name.isEmpty() || name.equals("Set displayed objective") || QuestElementCreatorGui.editing.progressTrigger == null) {
             Utils.sendModMessage("§cValues not set");
             return false;
@@ -371,11 +374,11 @@ public class QuestCreatorGui extends GuiScreen {
         QuestElementCreatorGui.editing.name = name;
         if (QuestElementCreatorGui.editing.waypoint.equals(new Vector3f(69420, 69420, 69420))) QuestElementCreatorGui.editing.waypoint = null;
 
-        if (index != -1) {
-            quest.remove(index);
+        if (QuestElementCreatorGui.oldElementIndex != -1) {
+            quest.remove(QuestElementCreatorGui.oldElementIndex);
             if (name.equals("END_OF_QUEST")) quest.add(QuestElementCreatorGui.editing);
-            else quest.add(index, QuestElementCreatorGui.editing);
-        } else quest.add(QuestElementCreatorGui.editing);
+            else quest.add(QuestElementCreatorGui.elementIndex, QuestElementCreatorGui.editing);
+        } else quest.add(QuestElementCreatorGui.elementIndex, QuestElementCreatorGui.editing);
         if (!QuestElementCreatorGui.editing.enabled) {
             boolean keep = false;
             for (QuestElement element : quest) {

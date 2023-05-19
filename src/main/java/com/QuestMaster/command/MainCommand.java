@@ -8,16 +8,15 @@ import com.QuestMaster.config.Config;
 import com.QuestMaster.gui.*;
 import com.QuestMaster.utils.FileUtils;
 import com.QuestMaster.utils.Utils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MainCommand extends CommandBase {
     static String help() {
@@ -83,20 +82,22 @@ public class MainCommand extends CommandBase {
 
                 case "next":
                     StringBuilder questName = new StringBuilder();
-                    if (strings.length >= 2) {
+                    if (strings.length > 1) {
                         for (int i = 1; i < strings.length; i++) {
                             questName.append(strings[i]);
                         }
                     }
                     for (Map.Entry<String, List<Quest>> category : QuestMaster.quests.entrySet()) {
-                        for (Quest quest : category.getValue()) {
+                        for (int q = 0; q < category.getValue().size(); q++) {
+                            Quest quest = QuestMaster.quests.get(category.getKey()).get(q);
                             if (quest.enabled &! quest.isEmpty() && ((quest.locations.contains(QuestMaster.island) &! QuestMaster.island.equals(Island.NONE)) || quest.locations.isEmpty()) &&
                                     (questName.toString().isEmpty() || quest.name.contentEquals(questName))) {
                                 for (QuestElement element : quest) {
                                     if (element.enabled) {
                                         int index = quest.indexOf(element);
-                                        if (Config.disableLast) element.enabled = false;
-                                        quest.get(index + 1).enabled = true;
+                                        if (Config.disableLast) QuestMaster.quests.get(category.getKey()).get(q).enabled = false;
+                                        if (quest.size() >= index + 2) QuestMaster.quests.get(category.getKey()).get(index + 1).enabled = true;
+                                        return;
                                     }
                                 }
                             }
@@ -152,6 +153,24 @@ public class MainCommand extends CommandBase {
                             QuestElementCreatorGui.deleting = false;
                             Utils.sendModMessage("§aCancelled quest element deletion");
                             break;
+                    }
+                    break;
+
+                case "dev":
+                    if (strings.length > 1) {
+                        switch (strings[1].toLowerCase()) {
+                            case "printtab":
+                                Collection<NetworkPlayerInfo> players = Minecraft.getMinecraft().getNetHandler().getPlayerInfoMap();
+                                for (NetworkPlayerInfo player : players) {
+                                    if (player == null || player.getDisplayName() == null) continue;
+                                    String text = player.getDisplayName().getUnformattedText();
+                                    Utils.sendModMessage(text);
+                                }
+                                break;
+                        }
+                    } else {
+                        QuestMaster.dev =! QuestMaster.dev;
+                        Utils.sendModMessage("Dev mode " + Config.understandMe(QuestMaster.dev));
                     }
                     break;
 

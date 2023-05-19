@@ -19,7 +19,7 @@ public enum Island implements Serializable {
     JERRY_WORKSHOP("Jerry's Workshop"),
     PARK("The Park"),
     PRIVATE_ISLAND("Private Island"),
-    RIFT("Rift"),
+    RIFT("The Rift"),
     SPIDERS_DEN("Spider's Den");
 
     final String text;

@@ -20,7 +20,6 @@ import org.lwjgl.input.Keyboard;
 
 import javax.vecmath.Vector3f;
 import java.io.IOException;
-import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,7 +34,8 @@ public class QuestElementCreatorGui extends GuiScreen {
     public static boolean deleting = false;
 
 
-    private static int elementIndex = -1;
+    public static int oldElementIndex = -1;
+    public static int elementIndex = 0;
     private static String category = "";
     private static int quest = -1;
     private static String oldName = "";
@@ -43,6 +43,7 @@ public class QuestElementCreatorGui extends GuiScreen {
     
 
     private static GuiTextField elementName;
+    private static GuiTextField index;
     private static GuiButton trigger;
     private static GuiButton triggerType;
     private static List<Gui> triggerTypes = new ArrayList<>();
@@ -58,6 +59,8 @@ public class QuestElementCreatorGui extends GuiScreen {
     private GuiButton exactHeld;
     private static final List<String> stringToMB = new ArrayList<>(Arrays.asList("any", "left", "right"));
     private static GuiTextField requiredMouseButton;
+    private static GuiButton tolerance;
+    private static String toleranceText(int i) { return i == 0 ? "none" : i == 1 ? "y" : "all"; }
     private static GuiTextField positionx;
     private static GuiTextField positiony;
     private static GuiTextField positionz;
@@ -113,10 +116,12 @@ public class QuestElementCreatorGui extends GuiScreen {
         elementName = new GuiTextField(7, this.fontRendererObj, 0, 0, 250, 20);
         elementName.setMaxStringLength(100);
         elementName.setText(editing.name.isEmpty() ? "Set displayed objective" : editing.name);
+        index = new GuiTextField(1, this.fontRendererObj, 0, 0, 80, 20);
+        index.setText("Index: " + elementIndex);
         enabled = new GuiButton(1, 0, 0, 150, 20, "Element toggle: " + Config.understandMe(editing.enabled));
         waypoint = new GuiButton(1, 0, 0, 150, 20, "Edit waypoint position");
         setLast = new GuiButton(1, 0, 0, 80, 20, "Set last");
-        elementSettings = new ArrayList<>(Arrays.asList(elementName, trigger, waypoint, enabled, setLast));
+        elementSettings = new ArrayList<>(Arrays.asList(elementName, index, trigger, waypoint, enabled, setLast));
         GuiManager.displaycategory(elementSettings, width / 2f, height / 6f);
         setAllState(elementSettings, true);
 
@@ -137,8 +142,8 @@ public class QuestElementCreatorGui extends GuiScreen {
         manual = new GuiButton(31, 0, 0, 150, 20, "Manually enable");
         chatMessage = new GuiButton(32, 0, 0, 150, 20, "Chat message");
         clickPos = new GuiButton(33, 0, 0, 150, 20, "Click position");
-        playerCollect = new GuiButton(34, 0, 0, 150, 20, "Item collection");
-        playerPosition = new GuiButton(35, 0, 0, 150, 20, "Player position");
+        playerCollect = new GuiButton(35, 0, 0, 150, 20, "Item collection");
+        playerPosition = new GuiButton(36, 0, 0, 150, 20, "Player position");
         triggerTypes = new ArrayList<>(Arrays.asList(manual, chatMessage, clickPos, playerCollect, playerPosition));
 
         colorCodes = new GuiButton(0, 0, 0, 150, 20,  "Match color codes: " + Config.understandMe(true));
@@ -151,11 +156,12 @@ public class QuestElementCreatorGui extends GuiScreen {
         heldItemName.setMaxStringLength(150);
         exactHeld = new GuiButton(0, 0, 0, 150, 20,  exactText(true));
         requiredMouseButton = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
+        tolerance = new GuiButton(34, 0, 0, 150, 20, "Tolerance " + toleranceText(0));
         positionx = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
         positiony = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
         positionz = new GuiTextField(0, this.fontRendererObj, 0, 0, 100, 20);
         amountOfClicks = new GuiTextField(0, this.fontRendererObj, 0, 0, 180, 20);
-        clickPosCat = new ArrayList<>(Arrays.asList(heldItemName, exactHeld, requiredMouseButton, positionx, positiony, positionz, amountOfClicks));
+        clickPosCat = new ArrayList<>(Arrays.asList(heldItemName, exactHeld, requiredMouseButton, tolerance, positionx, positiony, positionz, amountOfClicks));
         GuiManager.displaycategory(clickPosCat, width / 2f, height / 6f + 90);
 
         collectedItemName = new GuiTextField(0, this.fontRendererObj, 0, 0, 250, 20);
@@ -175,7 +181,7 @@ public class QuestElementCreatorGui extends GuiScreen {
 
         loadTrigger();
 
-        hovers.put(trigger, "What triggers this element to be activated");
+        //hovers.put(trigger, "What triggers this element to be activated");
         hovers.put(x, "x");
         hovers.put(y, "y");
         hovers.put(z, "z");
@@ -200,6 +206,7 @@ public class QuestElementCreatorGui extends GuiScreen {
         super.drawScreen(mouseX, mouseY, partialTicks);
 
         elementName.drawTextBox();
+        index.drawTextBox();
         if (showWaypointCat) {
             for (Gui field : waypointCat) {
                 ((GuiTextField)field).drawTextBox();
@@ -260,6 +267,8 @@ public class QuestElementCreatorGui extends GuiScreen {
         boolean intsOnly = ((int) c > 47 && (int) c < 58) || (int) c == 8 || (int) c == 127 || kc == Keyboard.KEY_LEFT || kc == Keyboard.KEY_RIGHT || (kc == Keyboard.KEY_A && Keyboard.isKeyDown(Keyboard.KEY_LCONTROL));
         if (elementName.isFocused()) {
             elementName.textboxKeyTyped(c, kc);
+        } else if (intsOnly && index.isFocused()) {
+            index.textboxKeyTyped(c, kc);
         } else if ((intsOnly || (int) c == 45 || (int) c == 46) && showWaypointCat) {
             for (Gui field : waypointCat) {
                 if (((GuiTextField) field).isFocused()) {
@@ -354,7 +363,14 @@ public class QuestElementCreatorGui extends GuiScreen {
             if (!enWas && elementName.getText().equals("Set displayed objective")) elementName.setText("");
         } else if (enWas) {
             if (elementName.getText().isEmpty()) elementName.setText("Set displayed objective");
-        } else if (showWaypointCat) {
+        }
+        boolean inWas = index.isFocused();
+        index.mouseClicked(mouseX, mouseY, mouseButton);
+        if (index.isFocused()) {
+            if (!inWas) index.setText(index.getText().replace("Index: ", ""));
+        } else if (inWas) index.setText("Index: " + index.getText());
+
+        if (showWaypointCat) {
             for (Gui field : waypointCat) {
                 ((GuiTextField) field).mouseClicked(mouseX, mouseY, mouseButton);
             }
@@ -486,7 +502,7 @@ public class QuestElementCreatorGui extends GuiScreen {
             new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new QuestCreatorGui()))).start();
         } else if (button == save) {
             saveToElement();
-            if (QuestCreatorGui.saveElement(elementName.getText(), elementIndex)) {
+            if (QuestCreatorGui.saveElement(elementName.getText())) {
                 new Thread(() -> QuestMaster.mc.addScheduledTask(() -> QuestMaster.mc.displayGuiScreen(new QuestCreatorGui()))).start();
                 clear();
             }
@@ -558,6 +574,9 @@ public class QuestElementCreatorGui extends GuiScreen {
         } else if (button == exactHeld) {
             ((ClickPos) editing.progressTrigger).exact =! ((ClickPos) editing.progressTrigger).exact;
             exactHeld.displayString = exactText(((ClickPos) editing.progressTrigger).exact);
+        } else if (button == tolerance) {
+            ((ClickPos) editing.progressTrigger).tolerance = (((ClickPos) editing.progressTrigger).tolerance + 1) % 3;
+            tolerance.displayString = "Tolerance " + toleranceText(((ClickPos) editing.progressTrigger).tolerance);
         }
         else if (this.buttonList.contains(chatMessage) && this.buttonList.contains(clickPos)) {
             boolean clicked = true;
@@ -619,6 +638,7 @@ public class QuestElementCreatorGui extends GuiScreen {
                 amountOfClicks.setText("Required amount of clicks: " + ((ClickPos) editing.progressTrigger).amount);
                 heldItemName.setText("Held item name: " + ((ClickPos) editing.progressTrigger).heldItemName);
                 exactHeld.displayString = exactText(((ClickPos) editing.progressTrigger).exact);
+                tolerance.displayString = "Tolerance " + toleranceText(((ClickPos) editing.progressTrigger).tolerance);
 
                 setAllState(clickPosCat, true);
             } else if (editing.progressTrigger instanceof PlayerCollect) {
@@ -649,6 +669,7 @@ public class QuestElementCreatorGui extends GuiScreen {
 
     public static void loadElement(QuestElement element, int index) {
         elementIndex = index;
+        oldElementIndex = elementIndex;
         editing = element;
         oldName = element.name;
     }
@@ -665,7 +686,8 @@ public class QuestElementCreatorGui extends GuiScreen {
         editing = new QuestElement("", null, new Vector3f(69420, 69420, 69420));
         oldName = "";
         deleting = false;
-        elementIndex = -1;
+        elementIndex = 0;
+        oldElementIndex = -1;
 
     }
 
@@ -687,9 +709,9 @@ public class QuestElementCreatorGui extends GuiScreen {
     
     public static void deleteElement() {
         if (!deleting) return;
-        if (elementIndex != -1) {
+        if (oldElementIndex != -1) {
             if (quest != -1 &! category.isEmpty()) {
-                QuestMaster.quests.get(category).get(quest).remove(elementIndex);
+                QuestMaster.quests.get(category).get(quest).remove(oldElementIndex);
                 Utils.sendModMessage("§cDeleted element " + elementName.getText());
                 Quest q = QuestMaster.quests.get(category).get(quest);
                 FileUtils.save(q, FileUtils.questDir + category + "/", q.name + ".bin");
@@ -705,6 +727,9 @@ public class QuestElementCreatorGui extends GuiScreen {
             float y = Float.parseFloat(((GuiTextField) waypointCat.get(1)).getText());
             float z = Float.parseFloat(((GuiTextField) waypointCat.get(2)).getText());
             editing.waypoint = new Vector3f(x, y, z);
+
+            if (!index.getText().replace("Index: ", "").isEmpty()) elementIndex = Math.max(Integer.parseInt(index.getText().replace("Index: ", "")), 0);
+
         } catch (Exception e) {
             e.printStackTrace();
         }

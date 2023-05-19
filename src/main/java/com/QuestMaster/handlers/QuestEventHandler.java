@@ -6,12 +6,13 @@ import com.QuestMaster.classes.Quest;
 import com.QuestMaster.classes.QuestElement;
 import com.QuestMaster.config.Config;
 import com.QuestMaster.events.PacketEvent;
+import com.QuestMaster.utils.SkyblockItemHandler;
 import com.QuestMaster.utils.Utils;
 import com.QuestMaster.utils.WaypointUtils;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.client.C07PacketPlayerDigging;
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
+import net.minecraft.network.play.client.*;
 import net.minecraft.network.play.server.S2FPacketSetSlot;
+import net.minecraft.util.BlockPos;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -47,14 +48,35 @@ public class QuestEventHandler {
             ItemStack item = ((S2FPacketSetSlot) event.packet).func_149174_e();
             if (item == null) return;
             questCheckForLoop(item);
+            if (QuestMaster.dev) Utils.sendModMessage("DEV: " + ((S2FPacketSetSlot) event.packet).func_149174_e().stackSize + " " + ((S2FPacketSetSlot) event.packet).func_149174_e().getDisplayName()
+                    + " " + SkyblockItemHandler.getSkyBlockItemID(((S2FPacketSetSlot) event.packet).func_149174_e()));
         }
     }
 
     @SubscribeEvent
     void sendPacket(PacketEvent.SendEvent event) {
-        if (QuestMaster.mc.thePlayer == null || notMet()) return;
-        if (event.packet instanceof C07PacketPlayerDigging || event.packet instanceof C08PacketPlayerBlockPlacement) {
+        if (QuestMaster.mc.thePlayer == null || QuestMaster.mc.theWorld == null || notMet()) return;
+        if (event.packet instanceof C07PacketPlayerDigging || event.packet instanceof C08PacketPlayerBlockPlacement || event.packet instanceof C02PacketUseEntity) {
+            if (event.packet instanceof C02PacketUseEntity) if (((C02PacketUseEntity) event.packet).getEntityFromWorld(QuestMaster.mc.theWorld).getPosition().equals(new BlockPos(0,0,0))
+                    || ((C02PacketUseEntity) event.packet).getEntityFromWorld(QuestMaster.mc.theWorld).getPosition().equals(new BlockPos(-1,-1,-1))) return;
             questCheckForLoop(event.packet);
+            if (QuestMaster.dev) {
+                BlockPos pos = null;
+                int button = -1;
+                if (event.packet instanceof C07PacketPlayerDigging) {
+                    pos = ((C07PacketPlayerDigging) event.packet).getPosition();
+                    button = 0;
+                }
+                else if (event.packet instanceof C08PacketPlayerBlockPlacement) {
+                    pos = ((C08PacketPlayerBlockPlacement) event.packet).getPosition();
+                    button = 1;
+                }
+                else if (event.packet instanceof C02PacketUseEntity) {
+                    pos = ((C02PacketUseEntity) event.packet).getEntityFromWorld(QuestMaster.mc.theWorld).getPosition();
+                    button = ((C02PacketUseEntity) event.packet).getAction().equals(C02PacketUseEntity.Action.ATTACK) ? 0 : 1;
+                }
+                Utils.sendModMessage("DEV: " + button + " " + pos);
+            }
         }
     }
 

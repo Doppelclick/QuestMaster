@@ -27,7 +27,7 @@ public class PlayerCollect extends Trigger {
             }
             if (found) {
                 inInv += ((ItemStack) object).stackSize;
-                if (inInv >= amount) {
+                if (inInv >= amount) { //for some reason this triggers with too little
                     this.inInv = 0;
                     return true;
                 }

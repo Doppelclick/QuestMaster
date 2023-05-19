@@ -48,6 +48,7 @@ public class QuestMaster {
     public static String area = "unknown";
 
     public static HashMap<String, List<Quest>> quests = new HashMap<>();
+    public static boolean dev = false;
 
     @Mod.EventHandler
     void preInit(final FMLPreInitializationEvent event) {

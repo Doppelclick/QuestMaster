@@ -52,8 +52,10 @@ public class Quest extends ArrayList<QuestElement> implements Serializable {
                         super.get(i).enabled = true;
                         this.enabled = true;
                         if (Config.disableLast && i - 1 >= 0) {
-                            if (!super.get(i - 1).progressTrigger.equals(super.get(i).progressTrigger))
-                                super.get(i - 1).enabled = false;
+                            for (int e = 0; e < i; e++) {
+                                if (!super.get(e).progressTrigger.equals(super.get(i).progressTrigger))
+                                    super.get(e).enabled = false;
+                            }
                         }
                     }
                 }

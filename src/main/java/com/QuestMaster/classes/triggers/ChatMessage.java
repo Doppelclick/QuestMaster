@@ -43,7 +43,7 @@ public class ChatMessage extends Trigger {
             int found = 0;
             for (Map.Entry<String, Boolean> pattern : this.patterns.entrySet()) {
                 if (!pattern.getValue()) {
-                    Matcher matcher = Pattern.compile(pattern.getKey()).matcher(msg);
+                    Matcher matcher = Pattern.compile(pattern.getKey().replace("&", "§")).matcher(msg);
                     if (matcher.find()) {
                         this.patterns.put(pattern.getKey(), true);
                         found++;
