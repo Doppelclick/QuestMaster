@@ -24,7 +24,7 @@ A mod for custom Hypixel Skyblock quest guides
 ## Features
 + Quest categories
 + Quest consisting of elements
-+ Each element has a trigger, which activates the element and a waypoint render in the world as well as a name rendered onscreen
++ Each element has a trigger, which activates the element and a waypoint rendered in the world as well as a name rendered onscreen
 + Onscreen quest gui
 
 ## Command
@@ -44,3 +44,9 @@ A mod for custom Hypixel Skyblock quest guides
   + Position clicked
   + Item collected
   + Player position
+
+## Credits
++ Skytils' packet handler 
++ NotEnoughUpdates' waypoint renderer
++ DungeonRooms' update checker
++ Danker's Skyblock Mod's location manager
